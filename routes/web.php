@@ -1,8 +1,8 @@
 <?php
-use App\Http\Controllers\DataController;
+use App\Http\Controllers\MonitoringDoSpkController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [DataController::class, 'index'])->name('dashboard');
+Route::get('/', [MonitoringDoSpkController::class, 'index'])->name('dashboard');
 
 Route::get('/inputSelect', function () {
     return view('inputSelect');
@@ -16,4 +16,4 @@ Route::get('/inputSPK', function () {
     return view('inputSPK');
 })->name('inputSPK');
 
-Route::resource('data', DataController::class);
+Route::resource('monitoring_do_spk', MonitoringDoSpkController::class);

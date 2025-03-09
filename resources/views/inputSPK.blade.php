@@ -13,60 +13,61 @@
             margin: 0;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body class="bg-gray-100 flex flex-col items-center min-h-screen">
-    <nav class="bg-green-900 text-white w-full px-6 py-4 flex justify-between items-center shadow-md">
+<body class="flex flex-col items-center min-h-screen bg-gray-100">
+    <nav class="flex items-center justify-between w-full px-6 py-4 text-white bg-green-900 shadow-md">
         <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
-        <h1 class="text-xl font-bold mx-auto" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
+        <h1 class="mx-auto text-xl font-bold" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
     </nav>
 
-    <div class="w-full max-w-6xl flex flex-col space-y-4 mt-6">
+    <div class="flex flex-col w-full max-w-6xl mt-6 space-y-4">
 
         <div class="flex justify-start">
             <a href="{{ route('input.select') }}"
-                class="bg-green-500  text-white px-4 py-2 rounded hover:bg-green-600 mb-2">
+                class="px-4 py-2 mb-2 text-white bg-green-500 rounded hover:bg-green-600">
                 Tambahkan Data
             </a>
         </div>
 
-        <div class="bg-green-800 p-6 rounded-lg shadow-md flex flex-col items-center justify-center">
-            <h1 class="text-white text-3xl font-bold">Input Data SPK</h1>
+        <div class="flex flex-col items-center justify-center p-6 bg-green-800 rounded-lg shadow-md">
+            <h1 class="text-3xl font-bold text-white">Input Data SPK</h1>
             <table class="mt-4">
                 <thead>
                     <tr style="background-color: #E4E0E1;">
-                        <th class="border-2 border-black px-2 py-2 w-96">Nama Supervisor</th>
-                        <th class="border-2 border-black px-2 py-2 w-48">Target SPK</th>
-                        <th class="border-2 border-black px-2 py-2  w-48">Act SPK</th>
-                        <th class="border-2 border-black px-2 py-2  w-48">GAP</th>
-                        <th class="border-2 border-black px-2 py-2  w-48 ">Ach (%)</th>
+                        <th class="px-2 py-2 border-2 border-black w-96">Nama Supervisor</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black">Target SPK</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black">Act SPK</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black">GAP</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black ">Ach (%)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="data-row">
-                        <td class="text-white text-xl ml-4  border-2 border-black w-20">
-                            <div class="m-2 bg-transparent text-white rounded-md">
-                                <input type="text" class=" w-full bg-transparent paste-input px-1 text-center">
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="text" name="nama_supervisor" class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
-                        <td class="text-white text-xl ml-4  border-2 border-black w-20">
-                            <div class="m-2 bg-transparent text-white rounded-md">
-                                <input type="number" class=" w-full bg-transparent paste-input px-1 text-center">
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="number" name="target_spk" class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
-                        <td class="text-white text-xl ml-4  border-2 border-black w-20">
-                            <div class="m-2 bg-transparent text-white rounded-md">
-                                <input type="number" class=" w-full bg-transparent paste-input px-1 text-center">
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="number" name="act_spk" class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
-                        <td class="text-white text-xl ml-4  border-2 border-black w-20">
-                            <div class="m-2 bg-transparent text-white rounded-md">
-                                <input type="number" class=" w-full bg-transparent paste-input px-1 text-center">
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="number" name="gap_spk" class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
-                        <td class="text-white text-xl ml-4  border-2 border-black w-20">
-                            <div class="m-2 bg-transparent text-white rounded-md">
-                                <input type="number" class=" w-full bg-transparent paste-input px-1 text-center">
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="number" name="ach_spk" class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                     </tr>
@@ -130,6 +131,79 @@
                     if (!existingRows[rowIndex]) {
                         tableBody.appendChild(targetRow);
                     }
+                });
+            });
+        });
+
+        const calculateGapAndAch = () => {
+            const targetSpk = parseFloat(document.querySelector('input[name="target_spk"]').value) || 0;
+            const actSpk = parseFloat(document.querySelector('input[name="act_spk"]').value) || 0;
+            const gapSpk = actSpk - targetSpk;
+            const achSpk = (targetSpk > 0) ? (actSpk / targetSpk) * 100 : 0;
+            document.querySelector('input[name="gap_spk"]').value = gapSpk.toFixed(2);
+            document.querySelector('input[name="ach_spk"]').value = achSpk.toFixed(2);
+        };
+
+        document.querySelector('input[name="target_spk"]').addEventListener('input', calculateGapAndAch);
+        document.querySelector('input[name="act_spk"]').addEventListener('input', calculateGapAndAch);
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        document.getElementById("submit-button").addEventListener("click", function() {
+            const data = {
+                nama_supervisor: document.querySelector('input[name="nama_supervisor"]')?.value || '',
+                target_spk: document.querySelector('input[name="target_spk"]')?.value || null,
+                act_spk: document.querySelector('input[name="act_spk"]')?.value || null,
+                gap_spk: document.querySelector('input[name="gap_spk"]')?.value || null,
+                ach_spk: document.querySelector('input[name="ach_spk"]')?.value || null,
+                status: 'SPK',
+                type: 'SPK'
+            };
+
+            fetch("{{ route('monitoring_do_spk.store') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    let errorMessage = '';
+                    for (const [key, value] of Object.entries(data.errors)) {
+                        errorMessage += `${value}\n`;
+                    }
+                    Toast.fire({
+                        icon: "error",
+                        title: errorMessage,
+                        timer: 3000,
+                    });
+                } else {
+                    Toast.fire({
+                        icon: "success",
+                        title: 'Data SPK updated successfully.',
+                        timer: 1500,
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+            })
+            .catch(error => {
+                Toast.fire({
+                    icon: "error",
+                    title: "An error occurred",
+                    timer: 1500,
                 });
             });
         });
