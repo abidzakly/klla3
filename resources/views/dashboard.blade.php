@@ -308,7 +308,7 @@
                                 'gap_spk' || name === 'ach_spk' || name === 'status') {
                                 if (name == 'ach_do' || name == 'ach_spk' || name ==
                                     'status' || name == 'gap_do' || name == 'gap_spk') {
-                                    value = value.replace('%', '');
+                                    // value = value.replace('%', '');
                                     tdWidth = tdWidth + 40;
                                     if (name == 'status') {
                                         tdWidth = tdWidth + 40;
@@ -415,8 +415,15 @@
             $('#data-table').on('click', '.cancel', function() {
                 var row = $(this).closest('tr');
                 row.find('.editable').each(function() {
-                    var name = $(this).data('name');
-                    var value = $(this).find('input').val();
+                    let name = $(this).data('name'); 
+                    let value;                   
+                    if(name == 'ach_do' && name == 'ach_spk') {
+                        value = $(this).find('input').val();
+                        value = value.replace('%', '');
+                        $(this).html(value + '%');
+                    } else {
+                        value = $(this).find('input').val();
+                    }                 
                     $(this).html(value);
                 });
                 row.find('.save').remove();

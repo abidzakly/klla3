@@ -47,7 +47,7 @@ class MonitoringDoSpkController extends Controller
                 })
                 ->addColumn('ach_do', function ($row) {
                     $format = $row->ach_do ? number_format($row->ach_do, 2) : null;
-                    return '<div class="editable" data-name="ach_do">' . $format . '</div>';
+                    return '<div class="editable" data-name="ach_do">' . $format . '%</div>';
                 })
                 ->addColumn('target_spk', function ($row) {
                     return '<div class="editable" data-name="target_spk">' . $row->target_spk . '</div>';
@@ -60,7 +60,7 @@ class MonitoringDoSpkController extends Controller
                 })
                 ->addColumn('ach_spk', function ($row) {
                     $format = $row->ach_spk ? number_format($row->ach_spk, 2) : null;
-                    return '<div class="editable" data-name="ach_spk">' . $format . '</div>';
+                    return '<div class="editable" data-name="ach_spk">' . $format . '%</div>';
                 })
                 ->addColumn('status', function ($row) {
                     return '<div class="editable" data-name="status">' . $row->status . '</div>';
@@ -105,24 +105,25 @@ class MonitoringDoSpkController extends Controller
             'nama_supervisor' => 'required|string',
             'type' => 'required|in:all,' . implode(',', MonitoringType::values()),
         ];
+        
         $type = $request->type;
         if ($type === 'all') {
-            $rules = [
+            $rules = array_merge($rules, [
                 'target_do' => 'required|integer',
                 'act_do' => 'required|integer',
                 'target_spk' => 'required|integer',
                 'act_spk' => 'required|integer',
-            ];
+            ]);
         } elseif ($type === MonitoringType::DO) {
-            $rules = [
+            $rules = array_merge($rules, [
                 'target_do' => 'required|integer',
                 'act_do' => 'required|integer',
-            ];
+            ]);            
         } elseif ($type === MonitoringType::SPK) {
-            $rules = [
+            $rules = array_merge($rules, [
                 'target_spk' => 'required|integer',
                 'act_spk' => 'required|integer',
-            ];
+            ]);
         }
 
         $validator = Validator::make($request->all(), $rules);
