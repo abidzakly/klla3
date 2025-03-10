@@ -15,7 +15,7 @@ class MonitoringDoSpkController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MonitoringDoSpk::query()->orderBy('created_at', 'desc');
+            $data = MonitoringDoSpk::query();
 
             $listSearch = [
                 'nama_supervisor' => ['nama_supervisor'],
@@ -84,6 +84,8 @@ class MonitoringDoSpkController extends Controller
                         $order = request('order')[0];
                         $columns = request('columns');
                         $query->orderBy($columns[$order['column']]['data'], $order['dir']);
+                    } else {
+                        $query->orderByDesc('created_at'); // Default order by latest
                     }
                 })
                 ->make(true);

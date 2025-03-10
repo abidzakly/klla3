@@ -359,6 +359,7 @@
 
                     });
                 },
+                order: [[0, 'desc']],
                 // columnDefs: [{
                 //         width: '150px',
                 //         targets: [0]
