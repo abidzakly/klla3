@@ -295,6 +295,9 @@
                         var id = $(this).data('id');
                         var row = $(this).closest('tr');
 
+                        // Close other edit modes
+                        $('#data-table .cancel').click();
+
                         row.find('.editable').each(function() {
                             var value = $(this).text();
                             var name = $(this).data('name');
@@ -410,7 +413,16 @@
             });
 
             $('#data-table').on('click', '.cancel', function() {
-                table.ajax.reload(null, false);
+                var row = $(this).closest('tr');
+                row.find('.editable').each(function() {
+                    var name = $(this).data('name');
+                    var value = $(this).find('input').val();
+                    $(this).html(value);
+                });
+                row.find('.save').remove();
+                row.find('.cancel').remove();
+                row.find('.edit').show();
+                row.find('.delete').show();
             });
 
             $('#data-table').on('click', '.delete', function() {
