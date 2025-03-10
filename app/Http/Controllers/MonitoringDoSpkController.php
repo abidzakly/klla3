@@ -149,7 +149,8 @@ class MonitoringDoSpkController extends Controller
             });
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                // return response()->json(['errors' => $validator->errors()], 422);
+                return response()->json(['message' => 'Data ' . $request->type . ' gagal disimpan. Pastikan semua data terisi.'], 422);
             }
         }
 
