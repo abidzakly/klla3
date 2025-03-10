@@ -69,14 +69,14 @@ class MonitoringDoSpkController extends Controller
                     $editButton = '<button class="flex items-center justify-center gap-2 btn-custom edit btn" data-id="' . $row->id_monitoring_do_spk . '">
                         Edit <i class="ti ti-edit"></i>
                     </button>';
-                
+
                     $deleteButton = '<button class="flex items-center justify-center gap-2 btn-custom delete btn" data-id="' . $row->id_monitoring_do_spk . '">
                         Delete <i class="ti ti-trash"></i>
                     </button>';
-                
+
                     return '<div class="action-buttons" style="display: flex; gap: 0.5rem;">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
-                
+
                 ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action'])
                 ->make(true);
         }
@@ -100,42 +100,40 @@ class MonitoringDoSpkController extends Controller
     }
 
     public function store(Request $request)
-    {        
+    {
         $rules = [
             'nama_supervisor' => 'required|string',
             'type' => 'required|in:all,' . implode(',', MonitoringType::values()),
         ];
         $type = $request->type;
-        if ($type === 'all') {            
+        if ($type === 'all') {
             $rules = [
                 'target_do' => 'required|integer',
-                'act_do' => 'required|integer',                                
+                'act_do' => 'required|integer',
                 'target_spk' => 'required|integer',
-                'act_spk' => 'required|integer',                                
-            ];            
+                'act_spk' => 'required|integer',
+            ];
         } elseif ($type === MonitoringType::DO) {
             $rules = [
                 'target_do' => 'required|integer',
-                'act_do' => 'required|integer',                                
+                'act_do' => 'required|integer',
             ];
         } elseif ($type === MonitoringType::SPK) {
             $rules = [
                 'target_spk' => 'required|integer',
-                'act_spk' => 'required|integer',                                
+                'act_spk' => 'required|integer',
             ];
         }
-        
+
         $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($rules) {
             $validator->addRules($rules);
         });
-                
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        
-        dd($request->all());
 
         $namaSupervisor = strtolower($request->nama_supervisor);
 
@@ -143,8 +141,12 @@ class MonitoringDoSpkController extends Controller
 
         try {
             $isAll = $request->type == 'all';
-            $existingData = MonitoringDoSpk::whereRaw('LOWER(nama_supervisor) = ?', [$namaSupervisor])
+            $existingData = null;
+
+            if(!$isAll) {
+                $existingData = MonitoringDoSpk::whereRaw('LOWER(nama_supervisor) = ?', [$namaSupervisor])
                 ->orderBy('created_at', 'asc');
+            }
 
             if ($request->type === MonitoringType::DO) {
                 $existingData->where('ach_do', null);
@@ -156,8 +158,10 @@ class MonitoringDoSpkController extends Controller
                 $data = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk']));
             }
 
-            $existingData = $existingData->first();
-            
+            if($existingData) {
+                $existingData = $existingData->first();
+            }
+
             $this->calculateStatus($data, $request->type);
 
             if ($existingData && !$isAll) {
@@ -183,7 +187,7 @@ class MonitoringDoSpkController extends Controller
             } else {
                 // Create new record if no existing data
                 $data->save();
-            }            
+            }
             DB::commit();
             return response()->json(['message' => 'Data ' . $request->type . ' berhasil disimpan.']);
         } catch (\Exception $e) {
@@ -224,21 +228,21 @@ class MonitoringDoSpkController extends Controller
     }
 
     private function calculateStatus($data, $type)
-    {   
+    {
         if($type === 'all') {
             $data->gap_do = $data->act_do - $data->target_do;
             $data->ach_do = ($data->target_do > 0) ? ($data->act_do / $data->target_do) * 100 : 0;
             $data->gap_spk = $data->act_spk - $data->target_spk;
             $data->ach_spk = ($data->target_spk > 0) ? ($data->act_spk / $data->target_spk) * 100 : 0;
-        } else if ($type === MonitoringType::DO || $data->ach_spk === null) {        
+        } else if ($type === MonitoringType::DO || $data->ach_spk === null) {
             $data->gap_do = $data->act_do - $data->target_do;
             $data->ach_do = ($data->target_do > 0) ? ($data->act_do / $data->target_do) * 100 : 0;
         } elseif ($type === MonitoringType::SPK || $data->ach_do === null) {
             $data->gap_spk = $data->act_spk - $data->target_spk;
             $data->ach_spk = ($data->target_spk > 0) ? ($data->act_spk / $data->target_spk) * 100 : 0;
-        } 
-        
+        }
+
         $data->status = ($data->ach_do >= 100) ? StatusMonitoringDoSpk::ON_THE_TRACK : StatusMonitoringDoSpk::PUSH_SPK;
         return $data;
-    }   
+    }
 }
