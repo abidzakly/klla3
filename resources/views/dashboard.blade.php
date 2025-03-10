@@ -95,7 +95,7 @@
                 Tambahkan Data
             </a>
 
-            <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
+            {{-- <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
                 <table class="w-full text-center text-black border border-collapse border-gray-300">
                     <thead>
                         <tr style="background-color: #E4E0E1;">
@@ -155,7 +155,7 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </div> --}}
         </form>
 
         <!-- Data yang sudah tersimpan -->
@@ -180,7 +180,7 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
         function calculateGapAndAch(input) {
@@ -188,11 +188,11 @@
 
             // Ambil nilai yang relevan
             var target_do = parseFloat(row.find('[name="target_do"]').val() || row.find('[data-name="target_do"]')
-                .text()) || 0;
-            var act_do = parseFloat(row.find('[name="act_do"]').val()) || 0;
+                .text()) || null;
+            var act_do = parseFloat(row.find('[name="act_do"]').val()) || null;
             var target_spk = parseFloat(row.find('[name="target_spk"]').val() || row.find('[data-name="target_spk"]')
-                .text()) || 0;
-            var act_spk = parseFloat(row.find('[name="act_spk"]').val()) || 0;
+                .text()) || null;
+            var act_spk = parseFloat(row.find('[name="act_spk"]').val()) || null;
 
             // Hitung Gap & Achievement DO jika input yang diubah adalah act_do
             var gap_do = act_do - target_do;
@@ -303,7 +303,7 @@
                             var name = $(this).data('name');
                             var tdWidth = $(this)
                                 .width(); // Ambil width td sebelum diubah menjadi input
-
+                                                       
                             if (name === 'gap_do' || name === 'ach_do' || name ===
                                 'gap_spk' || name === 'ach_spk' || name === 'status') {
                                 if (name == 'ach_do' || name == 'ach_spk' || name ==
@@ -317,13 +317,14 @@
                                 $(this).html('<input type="text" name="' + name +
                                     '" value="' + value +
                                     '" class="border border-gray-300 form-control editable" style="width:' +
-                                    tdWidth + 'px;" readonly>');
+                                    tdWidth + 'px;" readonly data-current-value="' + value + '">');
                             } else {
                                 $(this).html('<input type="text" name="' + name +
                                     '" value="' + value +
                                     '" class="border border-gray-300 form-control editable" style="width:' +
                                     tdWidth +
-                                    'px;" oninput="calculateGapAndAch($(this))">');
+                                    'px;" oninput="calculateGapAndAch($(this))" data-current-value="' +
+                                    value + '">');
                             }
                         });
 
@@ -414,22 +415,15 @@
 
             $('#data-table').on('click', '.cancel', function() {
                 var row = $(this).closest('tr');
+                // attach data-current-value attribute to input
                 row.find('.editable').each(function() {
-                    let name = $(this).data('name'); 
-                    let value;                   
-                    if(name == 'ach_do' && name == 'ach_spk') {
-                        value = $(this).find('input').val();
-                        value = value.replace('%', '');
-                        $(this).html(value + '%');
-                    } else {
-                        value = $(this).find('input').val();
-                    }                 
+                    var value = $(this).find('input').data('current-value');                                        
                     $(this).html(value);
                 });
                 row.find('.save').remove();
                 row.find('.cancel').remove();
                 row.find('.edit').show();
-                row.find('.delete').show();
+                row.find('.delete').show();               
             });
 
             $('#data-table').on('click', '.delete', function() {

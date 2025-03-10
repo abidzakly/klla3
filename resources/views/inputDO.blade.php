@@ -49,27 +49,32 @@
                     <tr class="data-row">
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="text" name="nama_supervisor" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="text" name="nama_supervisor"
+                                    class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="target_do" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="number" name="target_do" oninput="(calculateGapAndAch(this))"
+                                    class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="act_do" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="number" name="act_do" oninput="(calculateGapAndAch(this))"
+                                    class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="gap_do" class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                <input type="number" name="gap_do"
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="ach_do" class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                <input type="number" name="ach_do"
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                     </tr>
@@ -86,68 +91,119 @@
 
 </body>
 
-</html>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    function calculateGapAndAch(e) {
+        // find tr parent
+        const tr = e.closest('tr');        
+        console.log(tr.querySelector('input[name="target_do"]'))        
+        const targetDo = parseFloat(tr.querySelector('input[name="target_do"]').value) || 0;        
+        const actDo = parseFloat(tr.querySelector('input[name="act_do"]').value) || 0;        
+        const gapDo = actDo - targetDo;        
+        const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;        
+        tr.querySelector('input[name="gap_do"]').value = gapDo;        
+        tr.querySelector('input[name="ach_do"]').value = achDo;                      
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".paste-input").forEach(input => {
-            input.addEventListener("paste", function (event) {
+            input.addEventListener("paste", function(event) {
                 event.preventDefault(); // Prevent default paste behavior
 
                 let clipboardData = event.clipboardData || window.clipboardData;
                 let pastedData = clipboardData.getData("text"); // Get pasted content
+                console.log(pastedData)
 
-                let rows = pastedData.trim().split("\n").map(row => row.split("\t")); // Split into rows & columns
-                let tableBody = this.closest("table").querySelector("tbody"); // Find the correct table body
-                let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this.closest("td")); // Get starting column index
-                let existingRows = tableBody.querySelectorAll(".data-row:not(:first-child)"); // Get existing rows
+                let rows = pastedData.trim().split("\n").map(row => row.split(
+                    "\t")); // Split into rows & columns
+                let tableBody = this.closest("table").querySelector(
+                    "tbody"); // Find the correct table body
+                let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
+                    .closest("td")); // Get starting column index
+                let existingRows = tableBody.querySelectorAll(
+                    ".data-row:not(:first-child)"); // Get existing rows
 
                 rows.forEach((data, rowIndex) => {
-                    let targetRow = existingRows[rowIndex] || document.createElement("tr"); // Use existing row or create new
+                    let targetRow = document.createElement(
+                        "tr"); // Use existing row or create new
                     targetRow.classList.add("data-row");
-
                     // Ensure targetRow has enough cells
-                    while (targetRow.children.length < this.closest("tr").children.length) {
+                    while (targetRow.children.length < this.closest("tr").children
+                        .length) {
                         let newCell = document.createElement("td");
                         newCell.className = this.closest("td").className;
                         let div = document.createElement("div");
                         div.className = "m-2 bg-transparent text-white rounded-md";
-                        let p = document.createElement("p");
-                        p.className = "editable w-full bg-transparent px-1 text-center";
-                        p.textContent = ""; // Empty cell initially
-                        div.appendChild(p);
+                        let input = document.createElement("input");
+                        input.className = "w-full bg-transparent px-1 text-center";
+                        input.type = "text";
+                        div.appendChild(input);
                         newCell.appendChild(div);
                         targetRow.appendChild(newCell);
+                        // let p = document.createElement("p");
+                        // p.className = "editable w-full bg-transparent px-1 text-center";
+                        // p.textContent = ""; // Empty cell initially
+                        // div.appendChild(p);
+                        // newCell.appendChild(div);
+                        // targetRow.appendChild(newCell);
+                    }
+
+                    if (data.every(cellData => cellData.trim() === "")) {
+                        return;
                     }
 
                     // Paste multiple columns
                     data.forEach((cellData, colIndex) => {
                         let targetColumnIndex = startColumnIndex + colIndex;
                         if (targetColumnIndex < targetRow.children.length) {
-                            let targetCell = targetRow.children[targetColumnIndex];
-                            targetCell.querySelector("p").textContent = cellData.trim();
+                            let targetCell = targetRow.children[
+                                targetColumnIndex];
+                            const nameColumn = ['nama_supervisor', 'target_do',
+                                'act_do', 'gap_do',
+                                'ach_do'
+                            ];
+                            targetCell.querySelector("input").name = nameColumn[
+                                targetColumnIndex];
+                            if (targetColumnIndex === 3 || targetColumnIndex ===
+                                4) {
+                                targetCell.querySelector("input").readOnly =
+                                    true;
+                            }
+                            if (targetColumnIndex === 1 || targetColumnIndex ===
+                                2) {
+                                targetCell.querySelector("input").setAttribute(
+                                    'oninput', 'calculateGapAndAch(this)');                                
+                                
+                                // $inputElement.trigger('input');
+                            }
+
+                            if (targetColumnIndex === 1 || targetColumnIndex ===
+                            2 || targetColumnIndex ==0) {
+                                const $inputElement = $(targetCell).find(
+                                    "input");
+                                $inputElement.val(cellData.trim())                                
+                            }
                         }
+                        // let targetColumnIndex = startColumnIndex + colIndex;
+                        // if (targetColumnIndex < targetRow.children.length) {
+                        //     let targetCell = targetRow.children[targetColumnIndex];
+                        //     targetCell.querySelector("p").textContent = cellData.trim();
+                        // }
                     });
 
                     // Add the row if it's new
-                    if (!existingRows[rowIndex]) {
-                        tableBody.appendChild(targetRow);
-                    }
+                    // if (!existingRows[rowIndex]) {
+                    // tableBody.appendChild(targetRow);
+                    // }
+
+                    tableBody.appendChild(targetRow);
+                    // trigger $inputElement.trigger('input');
+                    targetRow.querySelectorAll('input').forEach(input => {
+                        input.dispatchEvent(new Event('input'));
+                    });
                 });
             });
         });
-
-        const calculateGapAndAch = () => {
-            const targetDo = parseFloat(document.querySelector('input[name="target_do"]').value) || 0;
-            const actDo = parseFloat(document.querySelector('input[name="act_do"]').value) || 0;
-            const gapDo = actDo - targetDo;
-            const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
-            document.querySelector('input[name="gap_do"]').value = gapDo.toFixed(2);
-            document.querySelector('input[name="ach_do"]').value = achDo.toFixed(2);
-        };
-
-        document.querySelector('input[name="target_do"]').addEventListener('input', calculateGapAndAch);
-        document.querySelector('input[name="act_do"]').addEventListener('input', calculateGapAndAch);
 
         const Toast = Swal.mixin({
             toast: true,
@@ -161,23 +217,28 @@
         });
 
         document.getElementById("submit-button").addEventListener("click", function() {
-            const data = {
-                nama_supervisor: document.querySelector('input[name="nama_supervisor"]')?.value || '',
-                target_do: document.querySelector('input[name="target_do"]')?.value || null,
-                act_do: document.querySelector('input[name="act_do"]')?.value || null,
-                gap_do: document.querySelector('input[name="gap_do"]')?.value || null,
-                ach_do: document.querySelector('input[name="ach_do"]')?.value || null,
-                status: 'DO',
-                type: 'DO'
-            };
+            const data = [];
+            document.querySelectorAll(".data-row").forEach((row) => {
+                const dataRow = {
+                    nama_supervisor: row.querySelector('input[name="nama_supervisor"]')
+                        ?.value || '',
+                    target_do: row.querySelector('input[name="target_do"]')?.value || null,
+                    act_do: row.querySelector('input[name="act_do"]')?.value || null,
+                    gap_do: row.querySelector('input[name="gap_do"]')?.value || null,
+                    ach_do: row.querySelector('input[name="ach_do"]')?.value || null,                    
+                };
 
+                data.push(dataRow);
+            })                          
+
+            const requestBody = {data: data, type: 'DO'}
             fetch("{{ route('monitoring_do_spk.store') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(requestBody)
             })
             .then(response => response.json())
             .then(data => {
@@ -197,7 +258,7 @@
                         title: 'Data DO created successfully.',
                         timer: 1500,
                     }).then(() => {
-                        location.reload();
+                        // location.reload();
                     });
                 }
             })
@@ -211,3 +272,5 @@
         });
     });
 </script>
+
+</html>
