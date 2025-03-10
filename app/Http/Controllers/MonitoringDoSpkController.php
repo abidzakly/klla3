@@ -76,8 +76,14 @@ class MonitoringDoSpkController extends Controller
 
                     return '<div class="action-buttons" style="display: flex; gap: 0.5rem;">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
-
                 ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action'])
+                ->order(function ($query) {
+                    if (request()->has('order')) {
+                        $order = request('order')[0];
+                        $columns = request('columns');
+                        $query->orderBy($columns[$order['column']]['data'], $order['dir']);
+                    }
+                })
                 ->make(true);
         }
 
@@ -105,7 +111,7 @@ class MonitoringDoSpkController extends Controller
             'nama_supervisor' => 'required|string',
             'type' => 'required|in:all,' . implode(',', MonitoringType::values()),
         ];
-        
+
         $type = $request->type;
         if ($type === 'all') {
             $rules = array_merge($rules, [
@@ -118,7 +124,7 @@ class MonitoringDoSpkController extends Controller
             $rules = array_merge($rules, [
                 'target_do' => 'required|integer',
                 'act_do' => 'required|integer',
-            ]);            
+            ]);
         } elseif ($type === MonitoringType::SPK) {
             $rules = array_merge($rules, [
                 'target_spk' => 'required|integer',
@@ -144,9 +150,9 @@ class MonitoringDoSpkController extends Controller
             $isAll = $request->type == 'all';
             $existingData = null;
 
-            if(!$isAll) {
+            if (!$isAll) {
                 $existingData = MonitoringDoSpk::whereRaw('LOWER(nama_supervisor) = ?', [$namaSupervisor])
-                ->orderBy('created_at', 'asc');
+                    ->orderBy('created_at', 'asc');
             }
 
             if ($request->type === MonitoringType::DO) {
@@ -159,7 +165,7 @@ class MonitoringDoSpkController extends Controller
                 $data = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk']));
             }
 
-            if($existingData) {
+            if ($existingData) {
                 $existingData = $existingData->first();
             }
 
@@ -199,25 +205,31 @@ class MonitoringDoSpkController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = MonitoringDoSpk::findOrFail($id);
+        try {
+            $data = MonitoringDoSpk::findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
-            'nama_supervisor' => 'required|string',
-            'target_do' => 'required|integer',
-            'act_do' => 'required|integer',
-            'target_spk' => 'required|integer',
-            'act_spk' => 'required|integer',
-            'status' => 'nullable|string',
-        ]);
+            $validator = Validator::make($request->all(), [
+                'nama_supervisor' => 'required|string',
+                'target_do' => 'required|integer',
+                'act_do' => 'required|integer',
+                'target_spk' => 'required|integer',
+                'act_spk' => 'required|integer',
+                'status' => 'nullable|string',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $dataUodate = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk']));
+            $dataUpdate = $this->calculateStatus($dataUodate, 'all');
+            // dd($dataUpdate->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'gap_do', 'ach_do', 'gap_spk', 'ach_spk', 'status']));
+            $data->update($dataUpdate->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'gap_do', 'ach_do', 'gap_spk', 'ach_spk', 'status']));
+
+            return response()->json(['message' => 'Data berhasil diperbarui.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Terjadi kesalahan ' . $e->getMessage()], 500);
         }
-
-        $data->update($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'status']));
-        $this->calculateStatus($data, $request->type);
-
-        return response()->json(['message' => 'Data berhasil diperbarui.']);
     }
 
     public function destroy($id)
@@ -230,7 +242,7 @@ class MonitoringDoSpkController extends Controller
 
     private function calculateStatus($data, $type)
     {
-        if($type === 'all') {
+        if ($type === 'all') {
             $data->gap_do = $data->act_do - $data->target_do;
             $data->ach_do = ($data->target_do > 0) ? ($data->act_do / $data->target_do) * 100 : 0;
             $data->gap_spk = $data->act_spk - $data->target_spk;
