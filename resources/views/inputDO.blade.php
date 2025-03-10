@@ -18,7 +18,9 @@
 
 <body class="flex flex-col items-center min-h-screen bg-gray-100">
     <nav class="flex items-center justify-between w-full px-6 py-4 text-white bg-green-900 shadow-md">
-        <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
+        <a href="{{ url('/') }}">
+            <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
+        </a>
         <h1 class="mx-auto text-xl font-bold" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
     </nav>
 

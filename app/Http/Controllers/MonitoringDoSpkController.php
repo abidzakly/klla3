@@ -46,7 +46,7 @@ class MonitoringDoSpkController extends Controller
                     return '<div class="editable" data-name="gap_do">' . $row->gap_do . '</div>';
                 })
                 ->addColumn('ach_do', function ($row) {
-                    $format = number_format($row->ach_do, 2);
+                    $format = $row->ach_do ? number_format($row->ach_do, 2) : null;
                     return '<div class="editable" data-name="ach_do">' . $format . '</div>';
                 })
                 ->addColumn('target_spk', function ($row) {
@@ -59,17 +59,24 @@ class MonitoringDoSpkController extends Controller
                     return '<div class="editable" data-name="gap_spk">' . $row->gap_spk . '</div>';
                 })
                 ->addColumn('ach_spk', function ($row) {
-                    $format = number_format($row->ach_spk, 2);
+                    $format = $row->ach_spk ? number_format($row->ach_spk, 2) : null;
                     return '<div class="editable" data-name="ach_spk">' . $format . '</div>';
                 })
                 ->addColumn('status', function ($row) {
                     return '<div class="editable" data-name="status">' . $row->status . '</div>';
                 })
                 ->addColumn('action', function ($row) {
-                    $editButton = '<button class="edit btn btn-success btn-sm" data-id="' . $row->id_monitoring_do_spk . '"><i class="ti ti-edit"></i></button>';
-                    $deleteButton = '<button class="delete btn btn-danger btn-sm" data-id="' . $row->id_monitoring_do_spk . '"><i class="ti ti-trash"></i></button>';
+                    $editButton = '<button class="flex items-center justify-center gap-2 btn-custom edit btn" data-id="' . $row->id_monitoring_do_spk . '">
+                        Edit <i class="ti ti-edit"></i>
+                    </button>';
+                
+                    $deleteButton = '<button class="flex items-center justify-center gap-2 btn-custom delete btn" data-id="' . $row->id_monitoring_do_spk . '">
+                        Delete <i class="ti ti-trash"></i>
+                    </button>';
+                
                     return '<div class="action-buttons" style="display: flex; gap: 0.5rem;">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
+                
                 ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action'])
                 ->make(true);
         }
@@ -93,92 +100,95 @@ class MonitoringDoSpkController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
+    {        
+        $rules = [
             'nama_supervisor' => 'required|string',
-            'target_do' => 'nullable|integer',
-            'act_do' => 'nullable|integer',
-            'gap_do' => 'nullable|numeric',
-            'ach_do' => 'nullable|numeric',
-            'target_spk' => 'nullable|integer',
-            'act_spk' => 'nullable|integer',
-            'gap_spk' => 'nullable|numeric',
-            'ach_spk' => 'nullable|numeric',
-            'status' => 'nullable|string',
-            'type' => 'required|in:' . implode(',', MonitoringType::values()),
-        ]);
-
-        if ($request->type === MonitoringType::DO) {
-            $validator->after(function ($validator) {
-                $validator->addRules([
-                    'target_do' => 'required|integer',
-                    'act_do' => 'required|integer',
-                    'gap_do' => 'required|numeric',
-                    'ach_do' => 'required|numeric',
-                ]);
-            });
-        } elseif ($request->type === MonitoringType::SPK) {
-            $validator->after(function ($validator) {
-                $validator->addRules([
-                    'target_spk' => 'required|integer',
-                    'act_spk' => 'required|integer',
-                    'gap_spk' => 'required|numeric',
-                    'ach_spk' => 'required|numeric',
-                ]);
-            });
+            'type' => 'required|in:all,' . implode(',', MonitoringType::values()),
+        ];
+        $type = $request->type;
+        if ($type === 'all') {            
+            $rules = [
+                'target_do' => 'required|integer',
+                'act_do' => 'required|integer',                                
+                'target_spk' => 'required|integer',
+                'act_spk' => 'required|integer',                                
+            ];            
+        } elseif ($type === MonitoringType::DO) {
+            $rules = [
+                'target_do' => 'required|integer',
+                'act_do' => 'required|integer',                                
+            ];
+        } elseif ($type === MonitoringType::SPK) {
+            $rules = [
+                'target_spk' => 'required|integer',
+                'act_spk' => 'required|integer',                                
+            ];
         }
+        
+        $validator = Validator::make($request->all(), $rules);
 
+        $validator->after(function ($validator) use ($rules) {
+            $validator->addRules($rules);
+        });
+                
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+        
+        dd($request->all());
 
         $namaSupervisor = strtolower($request->nama_supervisor);
 
         DB::beginTransaction();
 
         try {
+            $isAll = $request->type == 'all';
             $existingData = MonitoringDoSpk::whereRaw('LOWER(nama_supervisor) = ?', [$namaSupervisor])
                 ->orderBy('created_at', 'asc');
 
             if ($request->type === MonitoringType::DO) {
                 $existingData->where('ach_do', null);
+                $data = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do']));
             } elseif ($request->type === MonitoringType::SPK) {
                 $existingData->where('ach_spk', null);
+                $data = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_spk', 'act_spk']));
+            } else {
+                $data = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk']));
             }
 
             $existingData = $existingData->first();
+            
+            $this->calculateStatus($data, $request->type);
 
-            if ($existingData) {
+            if ($existingData && !$isAll) {
                 if ($request->type === MonitoringType::DO) {
                     if ($existingData->ach_do) {
                         // Create new record if SPK data already exists
-                        $data = MonitoringDoSpk::create($request->all());
+                        $data->save();
                     } else {
                         // Update existing record
-                        $existingData->update($request->only(['target_do', 'act_do', 'gap_do', 'ach_do']));
+                        $existingData->update($data->only(['target_do', 'act_do', 'gap_do', 'ach_do']));
                         $data = $existingData;
                     }
                 } elseif ($request->type === MonitoringType::SPK) {
                     if ($existingData->ach_spk) {
                         // Create new record if DO data already exists
-                        $data = MonitoringDoSpk::create($request->all());
+                        $data->save();
                     } else {
                         // Update existing record
-                        $existingData->update($request->only(['target_spk', 'act_spk', 'gap_spk', 'ach_spk']));
+                        $existingData->update($data->only(['target_spk', 'act_spk', 'gap_spk', 'ach_spk']));
                         $data = $existingData;
                     }
                 }
             } else {
                 // Create new record if no existing data
-                $data = MonitoringDoSpk::create($request->all());
-            }
-
-            $this->calculateStatus($data, $request->type);
+                $data->save();
+            }            
             DB::commit();
-            return response()->json(['message' => 'Data ' . $request->type . ' created successfully.']);
+            return response()->json(['message' => 'Data ' . $request->type . ' berhasil disimpan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Terjadi kesalahan ' . $e->getMessage()], 500);
         }
     }
 
@@ -202,7 +212,7 @@ class MonitoringDoSpkController extends Controller
         $data->update($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'status']));
         $this->calculateStatus($data, $request->type);
 
-        return response()->json(['message' => 'Data updated successfully.']);
+        return response()->json(['message' => 'Data berhasil diperbarui.']);
     }
 
     public function destroy($id)
@@ -210,20 +220,25 @@ class MonitoringDoSpkController extends Controller
         $data = MonitoringDoSpk::findOrFail($id);
         $data->delete();
 
-        return response()->json(['message' => 'Data deleted successfully.']);
+        return response()->json(['message' => 'Data berhasil dihapus.']);
     }
 
     private function calculateStatus($data, $type)
-    {
-        if ($type === MonitoringType::DO || $data->ach_spk === null) {
+    {   
+        if($type === 'all') {
+            $data->gap_do = $data->act_do - $data->target_do;
+            $data->ach_do = ($data->target_do > 0) ? ($data->act_do / $data->target_do) * 100 : 0;
+            $data->gap_spk = $data->act_spk - $data->target_spk;
+            $data->ach_spk = ($data->target_spk > 0) ? ($data->act_spk / $data->target_spk) * 100 : 0;
+        } else if ($type === MonitoringType::DO || $data->ach_spk === null) {        
             $data->gap_do = $data->act_do - $data->target_do;
             $data->ach_do = ($data->target_do > 0) ? ($data->act_do / $data->target_do) * 100 : 0;
         } elseif ($type === MonitoringType::SPK || $data->ach_do === null) {
             $data->gap_spk = $data->act_spk - $data->target_spk;
             $data->ach_spk = ($data->target_spk > 0) ? ($data->act_spk / $data->target_spk) * 100 : 0;
-        }
-
+        } 
+        
         $data->status = ($data->ach_do >= 100) ? StatusMonitoringDoSpk::ON_THE_TRACK : StatusMonitoringDoSpk::PUSH_SPK;
-        $data->save();
-    }
+        return $data;
+    }   
 }

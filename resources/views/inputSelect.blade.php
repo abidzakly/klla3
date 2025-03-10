@@ -15,31 +15,35 @@
     </style>
 </head>
 
-<body class="bg-gray-100 flex flex-col items-center min-h-screen">
-    <nav class="bg-green-900 text-white w-full px-6 py-4 flex justify-between items-center shadow-md">
-        <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
-        <h1 class="text-xl font-bold mx-auto" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
+<body class="flex flex-col items-center min-h-screen bg-gray-100">
+    <nav class="flex items-center justify-between w-full px-6 py-4 text-white bg-green-900 shadow-md">
+        <a href="{{ url('/') }}">
+            <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
+        </a>
+        <h1 class="mx-auto text-xl font-bold" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
     </nav>
 
-    <div class="w-full max-w-6xl flex flex-col space-y-4 mt-6">
+    <div class="flex flex-col w-full max-w-6xl mt-6 space-y-4">
 
         <div class="flex justify-start">
-            <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2">
-                Input Data SPK
-            </button>
+            <a href="{{ url('/') }}">
+                <button class="px-4 py-2 mb-2 text-white bg-green-500 rounded hover:bg-green-600">
+                    Kembali
+                </button>
+            </a>            
         </div>
 
-        <div class="bg-green-800 p-6 rounded-lg shadow-md overflow-x-auto">
-            <div class="bg-gray-100 m-20 rounded-lg w-30 h-40 flex flex-col items-center justify-center gap-4">
-                <p class="text-l font-bold mx-auto"> Pilih jenis data yang akan ditambahkan</p>
+        <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
+            <div class="flex flex-col items-center justify-center h-40 gap-4 m-20 bg-gray-100 rounded-lg w-30">
+                <p class="mx-auto font-bold text-l"> Pilih jenis data yang akan ditambahkan</p>
                 <div class="flex flex-row gap-4">
 
                     <a href="{{ route('inputDO') }}"
-                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                        class="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600">
                         Input Data DO
                     </a>
                     <a href="{{ route('inputSPK') }}"
-                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                        class="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600">
                         Input Data SPK
                     </a>
                 </div>
