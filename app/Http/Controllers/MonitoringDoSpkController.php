@@ -15,7 +15,7 @@ class MonitoringDoSpkController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MonitoringDoSpk::query();
+            $data = MonitoringDoSpk::query()->orderBy('created_at', 'desc');
 
             $listSearch = [
                 'nama_supervisor' => ['nama_supervisor'],
@@ -89,7 +89,14 @@ class MonitoringDoSpkController extends Controller
                 ->make(true);
         }
 
-        return view('dashboard');
+        $lastTypeInput = MonitoringDoSpk::orderBy('created_at', 'desc')
+        ->orWhere('act_do', null)
+        ->orWhere('target_do', null)
+        ->orWhere('act_spk', null)
+        ->orWhere('target_spk', null)
+        ->first();
+        $data['lastType'] = $lastTypeInput?->act_do && $lastTypeInput?->target_do ? 'SPK' : 'DO';
+        return view('dashboard', $data);
     }
 
     private static function filterDatatable($query, $searchColumns)
@@ -111,7 +118,7 @@ class MonitoringDoSpkController extends Controller
     {
         if (count($request->data) == 1) {
             $rules = [
-                'nama_supervisor' => 'required|string',
+                'data.0.nama_supervisor' => 'required|string',
                 'type' => 'required|in:all,' . implode(',', MonitoringType::values()),
             ];
 
@@ -125,13 +132,13 @@ class MonitoringDoSpkController extends Controller
                 ]);
             } elseif ($type === MonitoringType::DO) {
                 $rules = array_merge($rules, [
-                    'target_do' => 'required|integer',
-                    'act_do' => 'required|integer',
+                    'data.0.target_do' => 'required|integer',
+                    'data.0.act_do' => 'required|integer',
                 ]);
             } elseif ($type === MonitoringType::SPK) {
                 $rules = array_merge($rules, [
-                    'target_spk' => 'required|integer',
-                    'act_spk' => 'required|integer',
+                    'data.0.target_spk' => 'required|integer',
+                    'data.0.act_spk' => 'required|integer',
                 ]);
             }
 
@@ -155,6 +162,11 @@ class MonitoringDoSpkController extends Controller
                     continue;
                 }
 
+                // dd(in_array(null, $row));
+                if(in_array(null, $row)) {
+                    return response()->json(['message' => 'Data ' . $request->type . ' gagal disimpan. Pastikan semua data terisi.'], 422);
+                }
+
                 $namaSupervisor = strtolower($row['nama_supervisor']);
                 $isAll = $request->type == 'all';
                 $existingData = null;
@@ -165,14 +177,14 @@ class MonitoringDoSpkController extends Controller
                 }
 
                 if ($request->type === MonitoringType::DO) {
-                    $existingData->where('ach_do', null);
+                    $existingData->where('act_do', null)->where('target_do', null);
                     $newData = new MonitoringDoSpk([
                         'nama_supervisor' => $row['nama_supervisor'],
                         'target_do' => $row['target_do'],
                         'act_do' => $row['act_do']
                     ]);
                 } elseif ($request->type === MonitoringType::SPK) {
-                    $existingData->where('ach_spk', null);
+                    $existingData->where('act_spk', null)->where('target_spk', null);
                     $newData = new MonitoringDoSpk([
                         'nama_supervisor' => $row['nama_supervisor'],
                         'target_spk' => $row['target_spk'],

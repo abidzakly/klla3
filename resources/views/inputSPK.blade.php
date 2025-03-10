@@ -18,7 +18,9 @@
 
 <body class="flex flex-col items-center min-h-screen bg-gray-100">
     <nav class="flex items-center justify-between w-full px-6 py-4 text-white bg-green-900 shadow-md">
-        <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
+        <a href="{{ url('/') }}">
+            <img src="{{ asset('image/logooo 1.png') }}" alt="Logo">
+        </a>
         <h1 class="mx-auto text-xl font-bold" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
     </nav>
 
@@ -47,27 +49,34 @@
                     <tr class="data-row">
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="text" name="nama_supervisor" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="text" name="nama_supervisor"
+                                    class="w-full px-1 text-center bg-transparent paste-input">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="target_spk" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="number" name="target_spk"
+                                    class="w-full px-1 text-center bg-transparent paste-input"
+                                    oninput="(calculateGapAndAch(this))">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="act_spk" class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="number" name="act_spk"
+                                    class="w-full px-1 text-center bg-transparent paste-input"
+                                    oninput="(calculateGapAndAch(this))">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="gap_spk" class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                <input type="text" name="gap_spk"
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="ach_spk" class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                <input type="text" name="ach_spk"
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                     </tr>
@@ -81,68 +90,105 @@
     </div>
 </body>
 
-</html>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    function calculateGapAndAch(e) {
+        // find tr parent
+        const tr = e.closest('tr');
+        console.log(tr.querySelector('input[name="target_spk"]'))
+        const targetDo = parseFloat(tr.querySelector('input[name="target_spk"]').value) || 0;
+        const actDo = parseFloat(tr.querySelector('input[name="act_spk"]').value) || 0;
+        const gapDo = actDo - targetDo;
+        const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
+        tr.querySelector('input[name="gap_spk"]').value = gapDo.toFixed(2);
+        tr.querySelector('input[name="ach_spk"]').value = achDo.toFixed(2) + "%";
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll(".paste-input").forEach(input => {
-            input.addEventListener("paste", function (event) {
+            input.addEventListener("paste", function(event) {
                 event.preventDefault(); // Prevent default paste behavior
 
                 let clipboardData = event.clipboardData || window.clipboardData;
                 let pastedData = clipboardData.getData("text"); // Get pasted content
 
-                let rows = pastedData.trim().split("\n").map(row => row.split("\t")); // Split into rows & columns
-                let tableBody = this.closest("table").querySelector("tbody"); // Find the correct table body
-                let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this.closest("td")); // Get starting column index
-                let existingRows = tableBody.querySelectorAll(".data-row:not(:first-child)"); // Get existing rows
+                let rows = pastedData.trim().split("\n").map(row => row.split(
+                    "\t")); // Split into rows & columns
+                let tableBody = this.closest("table").querySelector(
+                    "tbody"); // Find the correct table body
+                let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
+                    .closest("td")); // Get starting column index
+                let existingRows = tableBody.querySelectorAll(
+                    ".data-row:not(:first-child)"); // Get existing rows
 
                 rows.forEach((data, rowIndex) => {
-                    let targetRow = existingRows[rowIndex] || document.createElement("tr"); // Use existing row or create new
+                    let targetRow = document.createElement(
+                        "tr"); // Use existing row or create new
                     targetRow.classList.add("data-row");
 
                     // Ensure targetRow has enough cells
-                    while (targetRow.children.length < this.closest("tr").children.length) {
+                    while (targetRow.children.length < this.closest("tr").children
+                        .length) {
                         let newCell = document.createElement("td");
                         newCell.className = this.closest("td").className;
                         let div = document.createElement("div");
                         div.className = "m-2 bg-transparent text-white rounded-md";
-                        let p = document.createElement("p");
-                        p.className = "editable w-full bg-transparent px-1 text-center";
-                        p.textContent = ""; // Empty cell initially
-                        div.appendChild(p);
+                        let input = document.createElement("input");
+                        input.className = "w-full bg-transparent px-1 text-center";
+                        input.type = "text";
+                        div.appendChild(input);
                         newCell.appendChild(div);
                         targetRow.appendChild(newCell);
+                    }
+
+                    if (data.every(cellData => cellData.trim() === "")) {
+                        return;
                     }
 
                     // Paste multiple columns
                     data.forEach((cellData, colIndex) => {
                         let targetColumnIndex = startColumnIndex + colIndex;
                         if (targetColumnIndex < targetRow.children.length) {
-                            let targetCell = targetRow.children[targetColumnIndex];
-                            targetCell.querySelector("p").textContent = cellData.trim();
+                            let targetCell = targetRow.children[
+                                targetColumnIndex];
+                            const nameColumn = ['nama_supervisor', 'target_spk',
+                                'act_spk', 'gap_spk',
+                                'ach_spk'
+                            ];
+                            targetCell.querySelector("input").name = nameColumn[
+                                targetColumnIndex];
+                            if (targetColumnIndex === 3 || targetColumnIndex ===
+                                4) {
+                                targetCell.querySelector("input").readOnly =
+                                    true;
+                            }
+                            if (targetColumnIndex === 1 || targetColumnIndex ===
+                                2) {
+                                targetCell.querySelector("input").setAttribute(
+                                    'oninput', 'calculateGapAndAch(this)');
+                            }
+
+                            if (targetColumnIndex === 1 || targetColumnIndex ===
+                                2 || targetColumnIndex == 0) {
+                                const $inputElement = $(targetCell).find(
+                                    "input");
+                                $inputElement.val(cellData.trim())
+                            }
                         }
                     });
 
                     // Add the row if it's new
-                    if (!existingRows[rowIndex]) {
-                        tableBody.appendChild(targetRow);
-                    }
+                    // if (!existingRows[rowIndex]) {
+                    // tableBody.appendChild(targetRow);
+                    // }
+                    tableBody.appendChild(targetRow);
+
+                    targetRow.querySelectorAll('input').forEach(input => {
+                        input.dispatchEvent(new Event('input'));
+                    });
                 });
             });
         });
-
-        const calculateGapAndAch = () => {
-            const targetSpk = parseFloat(document.querySelector('input[name="target_spk"]').value) || 0;
-            const actSpk = parseFloat(document.querySelector('input[name="act_spk"]').value) || 0;
-            const gapSpk = actSpk - targetSpk;
-            const achSpk = (targetSpk > 0) ? (actSpk / targetSpk) * 100 : 0;
-            document.querySelector('input[name="gap_spk"]').value = gapSpk.toFixed(2);
-            document.querySelector('input[name="ach_spk"]').value = achSpk.toFixed(2);
-        };
-
-        document.querySelector('input[name="target_spk"]').addEventListener('input', calculateGapAndAch);
-        document.querySelector('input[name="act_spk"]').addEventListener('input', calculateGapAndAch);
 
         const Toast = Swal.mixin({
             toast: true,
@@ -156,53 +202,74 @@
         });
 
         document.getElementById("submit-button").addEventListener("click", function() {
-            const data = {
-                nama_supervisor: document.querySelector('input[name="nama_supervisor"]')?.value || '',
-                target_spk: document.querySelector('input[name="target_spk"]')?.value || null,
-                act_spk: document.querySelector('input[name="act_spk"]')?.value || null,
-                gap_spk: document.querySelector('input[name="gap_spk"]')?.value || null,
-                ach_spk: document.querySelector('input[name="ach_spk"]')?.value || null,
-                status: 'SPK',
-                type: 'SPK'
-            };
+            const data = [];
+            document.querySelectorAll(".data-row").forEach((row) => {
+                const dataRow = {
+                    nama_supervisor: row.querySelector('input[name="nama_supervisor"]')
+                        ?.value || '',
+                    target_spk: row.querySelector('input[name="target_spk"]')?.value || null,
+                    act_spk: row.querySelector('input[name="act_spk"]')?.value || null,
+                    gap_spk: row.querySelector('input[name="gap_spk"]')?.value || null,
+                    ach_spk: row.querySelector('input[name="ach_spk"]')?.value || null,
+                };
 
-            fetch("{{ route('monitoring_do_spk.store') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify(data)
+                data.push(dataRow);
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.errors) {
-                    let errorMessage = '';
-                    for (const [key, value] of Object.entries(data.errors)) {
-                        errorMessage += `${value}\n`;
+
+            const requestBody = {
+                data: data,
+                type: 'SPK'
+            }
+            fetch("{{ route('monitoring_do_spk.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => {
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            if (data.errors) {
+                                throw new Error(Object.values(data.errors).flat().join(
+                                    '\n'));
+                            }
+                            throw new Error(data.message ||
+                                'Terjadi kesalahan pada server.');
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.errors) {
+                        let errorMessage = Object.values(data.errors).flat().join('\n');
+
+                        Toast.fire({
+                            icon: "error",
+                            title: errorMessage,
+                            timer: 3000,
+                        });
+                    } else {
+                        Toast.fire({
+                            icon: "success",
+                            title: 'Data DO created successfully.',
+                            timer: 1500,
+                        }).then(() => {
+                            window.location.href = "{{ route('dashboard') }}";
+                        });
                     }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+
                     Toast.fire({
                         icon: "error",
-                        title: errorMessage,
+                        title: error.message || 'Terjadi kesalahan yang tidak diketahui.',
                         timer: 3000,
                     });
-                } else {
-                    Toast.fire({
-                        icon: "success",
-                        title: 'Data SPK updated successfully.',
-                        timer: 1500,
-                    }).then(() => {
-                        location.reload();
-                    });
-                }
-            })
-            .catch(error => {
-                Toast.fire({
-                    icon: "error",
-                    title: "An error occurred",
-                    timer: 1500,
                 });
-            });
         });
     });
 </script>
+</html>

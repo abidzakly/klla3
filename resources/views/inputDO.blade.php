@@ -67,13 +67,13 @@
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="gap_do"
+                                <input type="text" name="gap_do"
                                     class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="number" name="ach_do"
+                                <input type="text" name="ach_do"
                                     class="w-full px-1 text-center bg-transparent paste-input" readonly>
                             </div>
                         </td>
@@ -95,14 +95,13 @@
 <script>
     function calculateGapAndAch(e) {
         // find tr parent
-        const tr = e.closest('tr');        
-        console.log(tr.querySelector('input[name="target_do"]'))        
-        const targetDo = parseFloat(tr.querySelector('input[name="target_do"]').value) || 0;        
-        const actDo = parseFloat(tr.querySelector('input[name="act_do"]').value) || 0;        
-        const gapDo = actDo - targetDo;        
-        const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;        
-        tr.querySelector('input[name="gap_do"]').value = gapDo;        
-        tr.querySelector('input[name="ach_do"]').value = achDo;                      
+        const tr = e.closest('tr');
+        const targetDo = parseFloat(tr.querySelector('input[name="target_do"]').value) || 0;
+        const actDo = parseFloat(tr.querySelector('input[name="act_do"]').value) || 0;
+        const gapDo = actDo - targetDo;
+        const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
+        tr.querySelector('input[name="gap_do"]').value = gapDo.toFixed(2);
+        tr.querySelector('input[name="ach_do"]').value = achDo.toFixed(2) + "%";
     };
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -172,16 +171,14 @@
                             if (targetColumnIndex === 1 || targetColumnIndex ===
                                 2) {
                                 targetCell.querySelector("input").setAttribute(
-                                    'oninput', 'calculateGapAndAch(this)');                                
-                                
-                                // $inputElement.trigger('input');
+                                    'oninput', 'calculateGapAndAch(this)');
                             }
 
                             if (targetColumnIndex === 1 || targetColumnIndex ===
-                            2 || targetColumnIndex ==0) {
+                                2 || targetColumnIndex == 0) {
                                 const $inputElement = $(targetCell).find(
                                     "input");
-                                $inputElement.val(cellData.trim())                                
+                                $inputElement.val(cellData.trim())
                             }
                         }
                         // let targetColumnIndex = startColumnIndex + colIndex;
@@ -225,50 +222,64 @@
                     target_do: row.querySelector('input[name="target_do"]')?.value || null,
                     act_do: row.querySelector('input[name="act_do"]')?.value || null,
                     gap_do: row.querySelector('input[name="gap_do"]')?.value || null,
-                    ach_do: row.querySelector('input[name="ach_do"]')?.value || null,                    
+                    ach_do: row.querySelector('input[name="ach_do"]')?.value || null,
                 };
 
                 data.push(dataRow);
-            })                          
-
-            const requestBody = {data: data, type: 'DO'}
-            fetch("{{ route('monitoring_do_spk.store') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify(requestBody)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.errors) {
-                    let errorMessage = '';
-                    for (const [key, value] of Object.entries(data.errors)) {
-                        errorMessage += `${value}\n`;
+
+            const requestBody = {
+                data: data,
+                type: 'DO'
+            }
+            fetch("{{ route('monitoring_do_spk.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => {
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            if(data.errors) {
+                                throw new Error(Object.values(data.errors).flat().join('\n'));
+                            }
+                            throw new Error(data.message ||
+                                'Terjadi kesalahan pada server.');
+                        }
+                        return data;
+                    });
+                })
+                .then(data => {
+                    if (data.errors) {
+                        let errorMessage = Object.values(data.errors).flat().join('\n');
+
+                        Toast.fire({
+                            icon: "error",
+                            title: errorMessage,
+                            timer: 3000,
+                        });
+                    } else {
+                        Toast.fire({
+                            icon: "success",
+                            title: 'Data DO created successfully.',
+                            timer: 1500,
+                        }).then(() => {
+                            window.location.href = "{{ route('dashboard') }}";
+                        });
                     }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+
                     Toast.fire({
                         icon: "error",
-                        title: errorMessage,
+                        title: error.message || 'Terjadi kesalahan yang tidak diketahui.',
                         timer: 3000,
                     });
-                } else {
-                    Toast.fire({
-                        icon: "success",
-                        title: 'Data DO created successfully.',
-                        timer: 1500,
-                    }).then(() => {
-                        // location.reload();
-                    });
-                }
-            })
-            .catch(error => {
-                Toast.fire({
-                    icon: "error",
-                    title: "An error occurred",
-                    timer: 1500,
                 });
-            });
         });
     });
 </script>

@@ -94,6 +94,20 @@
                 class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                 Tambahkan Data
             </a>
+            {{-- lastType --}}
+            @if ($lastType == 'DO')
+                <a href="{{ route('inputDO') }}">
+                    <button type="button" class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                        Tambahkan Data DO
+                    </button>    
+                </a>  
+            @elseif ($lastType == 'SPK')
+                <a href="{{ route('inputSPK') }}">
+                    <button type="button" class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                        Tambahkan Data SPK
+                    </button>    
+                </a>          
+            @endif
 
             {{-- <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
                 <table class="w-full text-center text-black border border-collapse border-gray-300">
