@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\InvitationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('dashboard');
 });
-
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -18,7 +18,7 @@ Route::get('/jenisEvent', function () {
 
 
 Route::get('/dataUndangan', function () {
-    return view('dataUndangan');
+    return view('invitation.index');
 })->name('data.undangan');
 
 
@@ -38,3 +38,7 @@ Route::get('/kwitansi', function () {
 Route::get('/detailBiaya', function () {
     return view('detailBiaya');
 })->name('detail.biaya');
+
+Route::resource('invitation', InvitationController::class);
+
+Route::post('/invitation/save', [InvitationController::class, 'save'])->name('invitation.save');
