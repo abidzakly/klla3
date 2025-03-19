@@ -266,7 +266,8 @@
                         return response.json().then(data => {
                             if (!response.ok) {
                                 if(data.errors) {
-                                    throw new Error(Object.values(data.errors).flat().join('\n'));
+                                    // throw new Error(Object.values(data.errors).flat().join('\n'));
+                                    throw new Error(Object.values(data.errors)[0][0]);
                                 }
                                 throw new Error(data.message ||
                                     'Terjadi kesalahan pada server.');
@@ -276,7 +277,8 @@
                     })
                     .then(data => {
                         if (data.errors) {
-                            let errorMessage = Object.values(data.errors).flat().join('\n');
+                            // let errorMessage = Object.values(data.errors).flat().join('\n');
+                            let errorMessage = Object.values(data.errors)[0][0];
 
                             Toast.fire({
                                 icon: "error",
@@ -304,6 +306,12 @@
                     }).finally(() => {
                         $(this).prop('disabled', false);
                         $(this).html('Submit');
+                        document.querySelectorAll(".data-row").forEach((row) => {
+                            row.querySelector('input[name="name"]').value = '';
+                            row.querySelector('input[name="address"]').value = '';
+                            row.querySelector('input[name="number_phone"]').value = '';
+                            row.querySelector('input[name="sales_invitation"]').value = '';
+                        });
                     });
             });
         });

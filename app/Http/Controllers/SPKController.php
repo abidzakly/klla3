@@ -306,8 +306,8 @@ class SPKController extends Controller
         $validator = Validator::make($request->all(), $rules, $message);
 
         if ($validator->fails()) {
-            // return Response::errorValidate($validator->errors(), 'Validation failed.');
-            return Response::error(null, 'Data SPK gagal disimpan. Pastikan semua data terisi.');
+            return Response::errorValidate($validator->errors(), 'Validation failed.');
+            // return Response::error(null, 'Data SPK gagal disimpan. Pastikan semua data terisi.');
         }
 
         DB::beginTransaction();

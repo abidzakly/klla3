@@ -503,8 +503,10 @@
                     return response.json().then(data => {
                         if (!response.ok) {
                             if (data.errors) {
-                                throw new Error(Object.values(data.errors).flat().join(
-                                    '\n'));
+                                // throw new Error(Object.values(data.errors).flat().join(
+                                //     '\n'));
+                                // just take one message error
+                                throw new Error(Object.values(data.errors)[0][0]);
                             }
                             throw new Error(data.message ||
                                 'Terjadi kesalahan pada server.');
@@ -514,7 +516,9 @@
                 })
                 .then(data => {
                     if (data.errors) {
-                        let errorMessage = Object.values(data.errors).flat().join('\n');
+                        // let errorMessage = Object.values(data.errors).flat().join('\n');
+                        // just take one message error
+                        let errorMessage = Object.values(data.errors)[0][0];
 
                         Toast.fire({
                             icon: "error",
@@ -542,6 +546,11 @@
                 }).finally(() => {
                     $(this).prop('disabled', false);
                     $(this).html('Submit');
+                    document.querySelectorAll(".data-row").forEach((row) => {
+                        row.querySelectorAll('input').forEach(input => {
+                            input.value = '';
+                        });
+                    });
                 });
         });
     });
