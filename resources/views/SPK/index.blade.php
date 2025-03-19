@@ -469,6 +469,8 @@
             });
 
             $('#data-table').on('click', '.save', function() {
+                $(this).prop('disabled', true);
+                $(this).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
                 var id = $(this).data('id');
                 var row = $(this).closest('tr');
                 var data = {};
@@ -524,6 +526,9 @@
                             });
                         }
                     }
+                }).always(function() {
+                    $(this).prop('disabled', false);
+                    $(this).html('<i class="ti ti-check"></i> Save');
                 });
             });
 
@@ -563,6 +568,8 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        $(this).prop('disabled', true);
+                        $(this).html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
                         $.ajax({
                             url: '/spk/' + id,
                             method: 'DELETE',
@@ -581,6 +588,9 @@
                                     timer: 1500,
                                 });
                             }
+                        }).always(function() {
+                            $(this).prop('disabled', false);
+                            $(this).html('<i class="ti ti-trash"></i> Delete');
                         });
                     }
                 });
