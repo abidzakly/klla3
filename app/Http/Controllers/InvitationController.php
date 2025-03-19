@@ -48,7 +48,7 @@ class InvitationController extends Controller
                     continue;
                 }
 
-                if(in_array(null, $row)) {
+                if (in_array(null, $row) && count($request->data) > 1) {
                     return response()->json(['message' => 'Data undangan gagal disimpan. Pastikan semua data terisi.'], 422);
                 }
 

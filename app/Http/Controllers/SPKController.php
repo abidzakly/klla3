@@ -89,7 +89,7 @@ class SPKController extends Controller
                     continue;
                 }
 
-                if (in_array(null, $row)) {
+                if (in_array(null, $row) && count($request->data) > 1) {
                     return response()->json(['message' => 'Data SPK gagal disimpan. Pastikan semua data terisi.'], 422);
                 }
 

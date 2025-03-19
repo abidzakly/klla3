@@ -116,27 +116,33 @@
                         <tr class="data-row">
                             <td class="text-white text-xl ml-4 border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
-                                    <input type="text" name="no" class=" w-full bg-transparent paste-input px-1 text-center" value="1" readonly>
+                                    <input type="text" name="no"
+                                        class=" w-full bg-transparent paste-input px-1 text-center" value="1"
+                                        readonly>
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
-                                    <input type="text" name="name" class=" w-full bg-transparent paste-input px-1 text-center">
+                                    <input type="text" name="name"
+                                        class=" w-full bg-transparent paste-input px-1 text-center">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
-                                    <input type="text" name="address" class=" w-full bg-transparent paste-input px-1 text-center">
+                                    <input type="text" name="address"
+                                        class=" w-full bg-transparent paste-input px-1 text-center">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
-                                    <input type="text" name="number_phone" class=" w-full bg-transparent paste-input px-1 text-center">
+                                    <input type="text" name="number_phone"
+                                        class=" w-full bg-transparent paste-input px-1 text-center">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
-                                    <input type="text" name="sales_invitation" class=" w-full bg-transparent paste-input px-1 text-center">
+                                    <input type="text" name="sales_invitation"
+                                        class=" w-full bg-transparent paste-input px-1 text-center">
                                 </div>
                             </td>
                         </tr>
@@ -160,16 +166,17 @@
                     let pastedData = clipboardData.getData("text"); // Get pasted content
 
                     let rows = pastedData.trim().split("\n").map(row => row.split(
-                    "\t")); // Split into rows & columns
+                        "\t")); // Split into rows & columns
                     let tableBody = this.closest("table").querySelector(
-                    "tbody"); // Find the correct table body
+                        "tbody"); // Find the correct table body
                     let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
                         .closest("td")); // Get starting column index
                     let existingRows = tableBody.querySelectorAll(
-                    ".data-row:not(:first-child)"); // Get existing rows
+                        ".data-row:not(:first-child)"); // Get existing rows
 
                     rows.forEach((data, rowIndex) => {
-                        let targetRow = existingRows[rowIndex] || document.createElement("tr"); // Use existing row or create new
+                        let targetRow = existingRows[rowIndex] || document.createElement(
+                            "tr"); // Use existing row or create new
                         targetRow.classList.add("data-row");
 
                         // Ensure targetRow has enough cells
@@ -181,7 +188,9 @@
                             div.className = "m-2 bg-transparent text-white rounded-md";
                             let input = document.createElement("input");
                             input.className = "w-full bg-transparent px-1 text-center";
-                            const nameColumn = ['no', 'name', 'address', 'number_phone', 'sales_invitation'];
+                            const nameColumn = ['no', 'name', 'address', 'number_phone',
+                                'sales_invitation'
+                            ];
                             input.type = "text";
                             input.name = nameColumn[targetRow.children.length];
                             if (targetRow.children.length === 0) {
@@ -203,13 +212,16 @@
                             if (targetColumnIndex < targetRow.children.length) {
                                 let targetCell = targetRow.children[
                                     targetColumnIndex];
-                                const nameColumn = ['no', 'name', 'address', 'number_phone', 'sales_invitation'];
+                                const nameColumn = ['no', 'name', 'address',
+                                    'number_phone', 'sales_invitation'
+                                ];
                                 targetCell.querySelector("input").name = nameColumn[
                                     targetColumnIndex];
                                 const $inputElement = $(targetCell).find(
                                     "input");
                                 if (targetColumnIndex === 0) {
-                                    $inputElement.val(existingRows.length + rowIndex + 1);
+                                    $inputElement.val(existingRows.length +
+                                        rowIndex + 1);
                                 } else {
                                     $inputElement.val(cellData.trim());
                                 }
@@ -243,8 +255,10 @@
                         // no: row.querySelector('input[name="no"]')?.value || '',
                         name: row.querySelector('input[name="name"]')?.value || '',
                         address: row.querySelector('input[name="address"]')?.value || '',
-                        number_phone: row.querySelector('input[name="number_phone"]')?.value || '',
-                        sales_invitation: row.querySelector('input[name="sales_invitation"]')?.value || '',
+                        number_phone: row.querySelector('input[name="number_phone"]')?.value ||
+                            '',
+                        sales_invitation: row.querySelector('input[name="sales_invitation"]')
+                            ?.value || '',
                     };
 
                     data.push(dataRow);
@@ -265,7 +279,7 @@
                     .then(response => {
                         return response.json().then(data => {
                             if (!response.ok) {
-                                if(data.errors) {
+                                if (data.errors) {
                                     // throw new Error(Object.values(data.errors).flat().join('\n'));
                                     throw new Error(Object.values(data.errors)[0][0]);
                                 }
@@ -291,6 +305,14 @@
                                 title: 'Data Undangan created successfully.',
                                 timer: 1500,
                             }).then(() => {
+                                document.querySelectorAll(".data-row").forEach((row) => {
+                                    row.querySelectorAll('input').forEach((input,
+                                        index) => {
+                                            if (index !== 0) {
+                                                input.value = '';
+                                            }
+                                        });
+                                });
                                 window.location.href = "{{ route('invitation.index') }}";
                             });
                         }
@@ -317,4 +339,5 @@
         });
     </script>
 </body>
+
 </html>

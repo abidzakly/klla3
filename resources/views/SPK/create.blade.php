@@ -322,8 +322,8 @@
                     </table>
                 </div>
                 <button id="submit-button"
-                class="mt-4 bg-[#E4E0E1] text-black w-[50%] py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 text-2xl font-bold">
-                Submit
+                    class="mt-4 bg-[#E4E0E1] text-black w-[50%] py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 text-2xl font-bold">
+                    Submit
                 </button>
             </div>
         </div>
@@ -340,13 +340,13 @@
                 let pastedData = clipboardData.getData("text"); // Get pasted content
 
                 let rows = pastedData.trim().split("\n").map(row => row.split(
-                "\t")); // Split into rows & columns
+                    "\t")); // Split into rows & columns
                 let tableBody = this.closest("table").querySelector(
-                "tbody"); // Find the correct table body
+                    "tbody"); // Find the correct table body
                 let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
                     .closest("td")); // Get starting column index
                 let existingRows = tableBody.querySelectorAll(
-                ".data-row:not(:first-child)"); // Get existing rows
+                    ".data-row:not(:first-child)"); // Get existing rows
 
                 rows.forEach((data, rowIndex) => {
                     let targetRow = existingRows[rowIndex] || document.createElement(
@@ -531,6 +531,14 @@
                             title: 'Data SPK created successfully.',
                             timer: 1500,
                         }).then(() => {
+                            document.querySelectorAll(".data-row").forEach((row) => {
+                                row.querySelectorAll('input').forEach((input,
+                                    index) => {
+                                        if (index !== 0) {
+                                            input.value = '';
+                                        }
+                                    });
+                            });
                             window.location.href = "{{ route('spk.index') }}";
                         });
                     }
@@ -546,11 +554,6 @@
                 }).finally(() => {
                     $(this).prop('disabled', false);
                     $(this).html('Submit');
-                    document.querySelectorAll(".data-row").forEach((row) => {
-                        row.querySelectorAll('input').forEach(input => {
-                            input.value = '';
-                        });
-                    });
                 });
         });
     });
