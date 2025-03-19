@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MonitoringDoSpkController;
+use App\Http\Controllers\SPKController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -23,7 +25,7 @@ Route::get('/dataUndangan', function () {
 
 
 Route::get('/dataSPK', function () {
-    return view('dataSPK');
+    return view('SPK.index');
 })->name('data.spk');
 
 
@@ -40,5 +42,8 @@ Route::get('/detailBiaya', function () {
 })->name('detail.biaya');
 
 Route::resource('invitation', InvitationController::class);
-
 Route::post('/invitation/save', [InvitationController::class, 'save'])->name('invitation.save');
+
+// make for spk
+Route::resource('spk', SPKController::class);
+Route::post('/spk/save', [SPKController::class, 'save'])->name('spk.save');
