@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Branch extends Model
+class PhotoType extends Model
 {
     use HasFactory, HasUlids;
-    protected $table = 'branches';
-    protected $primaryKey = 'id_branch';
+
+    protected $table = 'photo_types';
+    protected $primaryKey = 'id_photo_type';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $guarded = [];
-    public $timestamps = true;
 }

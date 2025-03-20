@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('event_types', function (Blueprint $table) {
-            $table->id();
+        Schema::create('photo_event_types', function (Blueprint $table) {
+            $table->ulid('id_photo_event_type')->primary();
+            $table->string('photo_event_type_name');
             $table->timestamps();
         });
     }
@@ -22,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_types');
+        Schema::dropIfExists('photo_event_types');
     }
 };

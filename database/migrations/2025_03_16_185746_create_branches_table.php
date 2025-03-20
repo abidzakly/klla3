@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('branches', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id_branch')->primary();
+            $table->string('branch_name');
             $table->timestamps();
         });
     }

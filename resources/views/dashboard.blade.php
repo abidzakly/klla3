@@ -29,7 +29,7 @@
                 <div class="absolute inset-0 bg-green-800 opacity-70 rounded-lg"></div>
 
                 <div class="relative flex gap-16 m-8 justify-center w-full">
-                    <a href="{{ route('jenis.event') }}" class="flex flex-col items-center justify-center mx-4 ">
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::JENIS_EVENT)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Jenis Event</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
@@ -37,7 +37,7 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('kwitansi') }}" class="flex flex-col items-center justify-center">
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::KWITANSI)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Kwitansi</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
@@ -61,7 +61,7 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('detail.biaya') }}" class="flex flex-col items-center justify-center">
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::DETAIL_BIAYA)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Detail Biaya</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
@@ -69,7 +69,7 @@
                         </div>
                     </a>
 
-                    <a href="{{ route('evaluasi') }}" class="flex flex-col items-center justify-center mx-4">
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::EVALUASI)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Evaluasi</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
