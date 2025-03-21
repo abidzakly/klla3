@@ -44,7 +44,7 @@ class PhotoEventController extends Controller
         $data = PhotoEvent::where('photo_event_type_id', $request->photo_event_type_id)
             ->where('branch_id', $request->branch_id);
 
-        $listSearch = ['file_name'];
+        $listSearch = ['file_path'];
         $data = self::filterDatatable($data, $listSearch);
 
 
@@ -88,49 +88,63 @@ class PhotoEventController extends Controller
             'photo_event_type_id' => 'required|ulid',
         ]);
 
-        $branchName = Branch::where('id_branch', $request->branch_id)->first()->branch_name;
-        foreach ($request->file('files') as $file) {
-            $fileName = $file->getClientOriginalName();
-            $jenisEvent = strtolower(str_replace(' ', '-', $photoEventType->photo_event_type_name));
-            $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}", $fileName);
+        DB::beginTransaction();
 
-            $counter = 1;
-            while (PhotoEvent::where('file_name', 'LIKE', '%' . $fileName . '%')
-            ->where('photo_event_type_id', $request->photo_event_type_id)
-            ->where('branch_id', $request->branch_id)->exists()) {
-                $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . "($counter)." . $file->getClientOriginalExtension();
-                $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}/", $fileName);
-                $counter++;
-            }
+        try {
+            $branchName = strtolower(str_replace(' ', '-', Branch::findOrFail($request->branch_id)->branch_name));
+                foreach ($request->file('files') as $file) {
+                    $jenisEvent = strtolower(str_replace(' ', '-', $photoEventType->photo_event_type_name));
+                    $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.' . $file->getClientOriginalExtension();
+                    $newPath = "photo-event/{$jenisEvent}/{$branchName}/{$fileName}";
 
-            PhotoEvent::create([
-                'photo_event_type_id' => $request->photo_event_type_id,
-                'branch_id' => $request->branch_id,
-                'file_name' => $path,
-            ]);
+                    $counter = 1;
+                    while (Storage::exists($newPath)) {
+                        $fileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . "($counter)." . $file->getClientOriginalExtension();
+                        $newPath = "photo-event/{$jenisEvent}/{$branchName}/{$fileName}";
+                        $counter++;
+                    }
+
+                    $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}/", $fileName);
+                    PhotoEvent::create([
+                        'photo_event_type_id' => $request->photo_event_type_id,
+                        'branch_id' => $request->branch_id,
+                        'file_path' => $path,
+                    ]);
+                }
+
+                DB::commit();
+                return Response::success(null, 'Upload berhasil');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Response::errorCatch($e, 'Upload gagal');
         }
-
-        return Response::success(null, 'Upload berhasil');
     }
 
     public function update(Request $request, PhotoEvent $photoEvent)
     {
         $request->validate([
-            'file_name' => 'required|string|unique:photo_events,file_name,' . $photoEvent->id,
+            'file_name' => 'required|string'
         ]);
 
-        $oldPath = "photo-event/{$photoEvent->photoEventType->photo_event_type_name}/{$photoEvent->file_name}";
-        $newPath = "photo-event/{$photoEvent->photoEventType->photo_event_type_name}/{$request->file_name}";
+        DB::beginTransaction();
 
-        if (Storage::exists($oldPath)) {
-            Storage::move($oldPath, $newPath);
+        try {
+            $oldPath = $photoEvent->file_path;
+            $newPath = "photo-event/{$photoEvent->photoEventType->photo_event_type_name}/{$request->file_name}";
+
+            if (Storage::exists($oldPath)) {
+                Storage::move($oldPath, $newPath);
+            }
+
+            $photoEvent->update([
+                'file_path' => $newPath,
+            ]);
+
+            return Response::success(null, 'Update berhasil');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Response::errorCatch($e, 'Update gagal');
         }
-
-        $photoEvent->update([
-            'file_name' => $request->file_name,
-        ]);
-
-        return Response::success(null, 'Update berhasil');
     }
 
     public function rename(Request $request, PhotoEvent $photoEvent)
@@ -141,31 +155,31 @@ class PhotoEventController extends Controller
             'file_name' => 'required|string',
         ]);
 
-        $pathInfo = pathinfo($photoEvent->file_name);
+        $pathInfo = pathinfo($photoEvent->file_path);
         $extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
 
         $counter = 1;
         $newFileName = $request->file_name . $extension;
+        $oldPath = $photoEvent->file_path;
+        $newPath = dirname($oldPath) . '/' . $newFileName;
 
-        while (PhotoEvent::where('file_name', 'LIKE', '%' . $newFileName . '%')
-            ->where('photo_event_type_id', $photoEvent->photo_event_type_id)
-            ->where('branch_id', $photoEvent->branch_id)
-            ->where('id_photo_event', '!=', $photoEvent->id_photo_event) // Mengecualikan dirinya sendiri
-            ->exists()) {
-
+        // PhotoEvent::where('file_name', 'LIKE', '%' . $newFileName . '%')
+        //     ->where('photo_event_type_id', $photoEvent->photo_event_type_id)
+        //     ->where('branch_id', $photoEvent->branch_id)
+        //     ->where('id_photo_event', '!=', $photoEvent->id_photo_event) // Mengecualikan dirinya sendiri
+        //     ->exists()
+        while (Storage::exists($newPath)) {
             $newFileName = $request->file_name . "($counter)" . $extension;
+            $newPath = dirname($oldPath) . '/' . $newFileName;
             $counter++;
         }
 
-
-        $oldPath = $photoEvent->file_name;
-        $newPath = dirname($oldPath) . '/' . $newFileName;
         if (Storage::exists($oldPath)) {
             Storage::move($oldPath, $newPath);
         }
 
         $photoEvent->update([
-            'file_name' => $newPath,
+            'file_path' => $newPath,
         ]);
 
         return Response::success(null, 'Rename berhasil');
@@ -177,7 +191,7 @@ class PhotoEventController extends Controller
 
         try {
             $photoEvent = PhotoEvent::findOrFail($photo_event);
-            $path = $photoEvent->file_name;
+            $path = $photoEvent->file_path;
 
             if (Storage::exists($path)) {
                 Storage::delete($path);

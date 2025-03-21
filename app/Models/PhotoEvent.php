@@ -25,11 +25,11 @@ class PhotoEvent extends Model
 
     public function getImage()
     {
-        return asset('storage/' . $this->file_name);
+        return asset('storage/' . $this->file_path);
     }
 
     public function getFileName()
     {
-        return pathinfo($this->file_name, PATHINFO_FILENAME);
+        return pathinfo($this->file_path, PATHINFO_FILENAME);
     }
 }

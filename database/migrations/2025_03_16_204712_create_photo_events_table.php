@@ -15,7 +15,7 @@ return new class extends Migration
             $table->ulid('id_photo_event')->primary();
             $table->ulid('photo_event_type_id'); // Pastikan ini juga ULID agar kompatibel
             $table->ulid('branch_id'); // Pastikan ini juga ULID agar kompatibel
-            $table->string('file_name')->index();
+            $table->string('file_path')->index();
             $table->timestamps();
 
             // Definisikan foreign key secara eksplisit
