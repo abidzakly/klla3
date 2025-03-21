@@ -234,12 +234,12 @@ class SPKController extends Controller
                 ->make(true);
         }
 
-        return view('spk.index');
+        return view('SPK.index');
     }
 
     public function create()
     {
-        return view('spk.create');
+        return view('SPK.create');
     }
 
     public function update(Request $request, $id)

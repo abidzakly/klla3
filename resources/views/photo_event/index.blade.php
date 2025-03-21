@@ -231,13 +231,20 @@
                     icon: 'info',
                     title: 'Upload sedang berlangsung',
                     text: 'Mohon menunggu...',
-                    timer: 1500,
+                    timer: 3000,
                     showConfirmButton: false
                 });
                 return;
             }
 
             if (files.length > 0) {
+                Toast.fire({
+                    icon: "info",
+                    title: "Proses upload sedang berlangsung..., mohon tunggu",
+                    timer: 3000,
+                });
+                $imageUpload.disabled = true;
+                $imageUpload.textContent = 'Uploading...';
                 isUploading = true;
                 $uploadingMessage.removeClass('hidden');
                 const formData = new FormData();
@@ -292,6 +299,8 @@
                         $uploadingMessage.addClass('hidden');
                     }
                 }).always(() => {
+                    $imageUpload.disabled = false;
+                    $imageUpload.textContent = 'Upload Foto';
                     $fileInput.val('');
                     $imageUpload.val('');
                 });
@@ -382,6 +391,16 @@
                         menu.toggleClass('hidden opacity-0 scale-95');
                     });
 
+                    document.addEventListener("click", (event) => {
+                        document.querySelectorAll(".file-options-menu").forEach((menu) => {
+                            if (!menu.previousElementSibling.contains(event
+                                    .target) && !menu.contains(event.target)) {
+                                menu.classList.add("hidden", "opacity-0",
+                                    "scale-95");
+                            }
+                        });
+                    });
+
                     $('.rename-button').off('click').on('click', function(e) {
                         e.preventDefault();
                         const id = $(this).data('id');
@@ -389,11 +408,21 @@
                         const currentValue = p.data('current-value');
                         p.replaceWith(
                             `<input type="text" data-id="${id}" value="${currentValue}" data-current-value="${currentValue}" class="rename-input" style="color: black;">`
-                            );
+                        );
                         $(`input[data-id="${id}"]`).focus();
+
+                        $(`input[data-id="${id}"]`).off('keypress').on('keypress', function(
+                            e) {
+                            if (e.which === 13) { // 13 = Enter key
+                                $(this).blur();
+                            }
+                        });
                     });
 
                     $('body').off('blur', '.rename-input').on('blur', '.rename-input', function() {
+                        document.querySelectorAll(".file-options-menu").forEach(menu => {
+                            menu.classList.add("hidden", "opacity-0", "scale-95");
+                        });
                         const id = $(this).data('id');
                         const newValue = $(this).val();
                         const input = $(this);
@@ -403,7 +432,7 @@
                         if (newValue === current) {
                             input.replaceWith(
                                 `<p data-id="${id}" class="text-black truncate rename-trigger" data-current-value="${current}">${current}</p>`
-                                );
+                            );
                             return;
                         }
 
@@ -477,7 +506,8 @@
                                         } else {
                                             let errorMessage = '';
                                             for (const [key,
-                                                value] of Object
+                                                    value
+                                                ] of Object
                                                 .entries(response
                                                     .errors)) {
                                                 errorMessage +=
@@ -492,13 +522,14 @@
                                     },
                                     error: function(response) {
                                         response = response
-                                        .responseJSON;
+                                            .responseJSON;
                                         let errorMessage = '';
                                         for (const [key,
-                                            value] of Object.entries(
+                                                value
+                                            ] of Object.entries(
                                                 response.errors)) {
                                             errorMessage +=
-                                            `${value}\n`;
+                                                `${value}\n`;
                                         }
                                         Toast.fire({
                                             icon: "error",

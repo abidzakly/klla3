@@ -83,7 +83,7 @@ class PhotoEventController extends Controller
     public function store(Request $request, PhotoEventType $photoEventType)
     {
         $request->validate([
-            'files.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'files.*' => 'required|image|mimes:jpeg,png,jpg|max:20048',
             'branch_id' => 'required|ulid',
             'photo_event_type_id' => 'required|ulid',
         ]);

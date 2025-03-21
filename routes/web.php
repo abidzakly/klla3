@@ -10,6 +10,13 @@ use App\Models\PhotoEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    // get all photo event types
+    $data['photoEventTypes'] = PhotoEventType::all();
+    $data['photoEventTypeEnum'] = new PhotoEventTypeEnum();
+    return view('dashboard', $data);
+})->name('dashboard');
+
 Route::get('/dashboard', function () {
     // get all photo event types
     $data['photoEventTypes'] = PhotoEventType::all();
