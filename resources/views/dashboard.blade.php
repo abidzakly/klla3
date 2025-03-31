@@ -229,7 +229,7 @@
                         <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
                         <th class="px-2 py-2 text-center border border-2 border-black" style="width: 140px">Status</th>
                         <th class="px-2 py-2 text-center border border-2 border-black">Aksi</th>
-                        <th class="px-2 py-2 text-center border border-2 border-black">Update At</th>
+                        <th class="px-2 py-2 text-center border border-2 border-black">Date</th>
                     </tr>
                 </thead>
             </table>
@@ -288,9 +288,9 @@
             const dateEnd = document.getElementById("date_end").value;
 
             console.log(new Date(dateStart) < new Date(dateEnd))
-            if (new Date(dateStart) > new Date(dateEnd)) {                
+            if (new Date(dateStart) > new Date(dateEnd)) {
                 Toast.fire({
-                    icon: "error",                    
+                    icon: "error",
                     title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
                     timer: 3000,
                 });
@@ -298,10 +298,10 @@
                 document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
                     'prev-date');
                 document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
-            } else if (new Date(dateEnd) < new Date(dateStart)) {                
+            } else if (new Date(dateEnd) < new Date(dateStart)) {
                 Toast.fire({
                     icon: "error",
-                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',                    
+                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
                     timer: 3000,
                 });
 
@@ -402,7 +402,7 @@
                         searchable: false
                     },
                     {
-                        data: 'updated_at',
+                        data: 'date',
                         visible: false
                     },
                 ],
@@ -644,7 +644,7 @@
                     });
             });
         });
-        
+
         function exportData() {
             const startDate = document.getElementById("date_start").value;
             const endDate = document.getElementById("date_end").value;
