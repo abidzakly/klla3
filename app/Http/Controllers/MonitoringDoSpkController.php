@@ -39,6 +39,7 @@ class MonitoringDoSpkController extends Controller
                 'ach_spk' => ['ach_spk'],
                 'created_at' => ['created_at'],
                 'updated_at' => ['updated_at'],
+                'date' => ['date'],
             ];
 
             $data = self::filterDatatable($data, $listSearch);
