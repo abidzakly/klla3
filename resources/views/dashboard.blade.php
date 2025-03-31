@@ -134,7 +134,7 @@
                     <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
                         prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))"
                         class="px-2 py-1 text-black rounded">
-                    <button type="button" id="filter-button" onclick="filterByDate()"
+                    <button type="button" id="filter-button" onclick="filterByDate($(this))"
                         class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                         Filter
                     </button>
@@ -143,10 +143,10 @@
                         Reset
                     </button>
                     {{-- export button --}}
-                    {{-- <button type="button"
+                    <button type="button" onclick="exportData()"
                         class="inline-block px-4 py-2 mb-4 text-white bg-blue-500 rounded hover:bg-blue-600">
                         Export
-                    </button> --}}
+                    </button>
                 </div>
             </div>
 
@@ -314,8 +314,12 @@
             }
         }
 
-        function filterByDate() {
+        function filterByDate(e) {
+            $(this).prop('disabled', true);
+            $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
             table.ajax.reload();
+            $('#filter-button').prop('disabled', false);
+            $('#filter-button').html('Filter');
         }
 
         function resetFilter() {
@@ -640,6 +644,13 @@
                     });
             });
         });
+        
+        function exportData() {
+            const startDate = document.getElementById("date_start").value;
+            const endDate = document.getElementById("date_end").value;
+
+            window.location.href = `{{ route('monitoring_do_spk.export') }}?start_date=${startDate}&end_date=${endDate}`;
+        }
     </script>
 </body>
 

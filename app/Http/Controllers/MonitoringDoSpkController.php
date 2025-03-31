@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
+use App\Exports\MonitoringDoSpkExport;
 
 class MonitoringDoSpkController extends Controller
 {
@@ -307,5 +308,26 @@ class MonitoringDoSpkController extends Controller
 
         $data->status = ($data->ach_do >= 100) ? StatusMonitoringDoSpk::ON_THE_TRACK : StatusMonitoringDoSpk::PUSH_SPK;
         return $data;
+    }
+
+    public function export(Request $request)
+    {
+        $query = MonitoringDoSpk::query();
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        } elseif ($request->start_date) {
+            $query->where('date', '>=', $request->start_date);
+        } elseif ($request->end_date) {
+            $query->where('date', '<=', $request->end_date);
+        }
+
+        $data = $query->get()->map(function ($item) {
+            $item->date = $item->date ? date('d-M-Y', strtotime($item->date)) : null;
+            return $item;
+        })->toArray();
+
+        $export = new MonitoringDoSpkExport($data);
+        return $export->download();
     }
 }

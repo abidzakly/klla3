@@ -16,4 +16,6 @@ Route::get('/inputSPK', function () {
     return view('inputSPK');
 })->name('inputSPK');
 
-Route::resource('monitoring_do_spk', MonitoringDoSpkController::class);
+Route::resource('monitoring_do_spk', MonitoringDoSpkController::class)->except(['show']);
+
+Route::get('/monitoring_do_spk/export', [MonitoringDoSpkController::class, 'export'])->name('monitoring_do_spk.export');
