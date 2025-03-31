@@ -100,26 +100,55 @@
         <!-- Form Input -->
         <form id="data-form" class="w-full">
             @csrf
-            <a href="{{ route('input.select') }}"
-                class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
-                Tambahkan Data
-            </a>
-            {{-- lastType --}}
-            @if ($lastType == 'DO')
-                <a href="{{ route('inputDO') }}">
-                    <button type="button"
+            <div class="flex justify-between">
+                <div>
+                    <a href="{{ route('input.select') }}"
                         class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
-                        Tambahkan Data DO
-                    </button>
-                </a>
-            @elseif ($lastType == 'SPK')
-                <a href="{{ route('inputSPK') }}">
-                    <button type="button"
+                        Tambahkan Data
+                    </a>
+                    {{-- lastType --}}
+                    @if ($lastType == 'DO')
+                        <a href="{{ route('inputDO') }}">
+                            <button type="button"
+                                class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                                Tambahkan Data DO
+                            </button>
+                        </a>
+                    @elseif ($lastType == 'SPK')
+                        <a href="{{ route('inputSPK') }}">
+                            <button type="button"
+                                class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                                Tambahkan Data SPK
+                            </button>
+                        </a>
+                    @endif
+                </div>
+
+                {{-- filter date start from and end from --}}
+                <div>
+                    <label for="date_start" class="text-black">Tanggal Awal:</label>
+                    <input type="date" id="date_start" name="date_start" value="{{ date('Y-m-d') }}"
+                        prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))"
+                        class="px-2 py-1 text-black rounded">
+                    <label for="date_end" class="text-black">Tanggal Akhir:</label>
+                    <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
+                        prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))"
+                        class="px-2 py-1 text-black rounded">
+                    <button type="button" id="filter-button" onclick="filterByDate()"
                         class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
-                        Tambahkan Data SPK
+                        Filter
                     </button>
-                </a>
-            @endif
+                    <button type="button" id="reset-button" onclick="resetFilter()"
+                        class="inline-block px-4 py-2 mb-4 text-white bg-red-500 rounded hover:bg-red-600">
+                        Reset
+                    </button>
+                    {{-- export button --}}
+                    {{-- <button type="button"
+                        class="inline-block px-4 py-2 mb-4 text-white bg-blue-500 rounded hover:bg-blue-600">
+                        Export
+                    </button> --}}
+                </div>
+            </div>
 
             {{-- <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
                 <table class="w-full text-center text-black border border-collapse border-gray-300">
@@ -198,9 +227,9 @@
                         <th class="px-2 py-2 border border-2 border-black">ACT SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
                         <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
-                        <th class="px-2 py-2 border border-2 border-black text-center" style="width: 140px">Status</th>
-                        <th class="px-2 py-2 border border-2 border-black text-center">Aksi</th>
-                        <th class="px-2 py-2 border border-2 border-black text-center">Update At</th>
+                        <th class="px-2 py-2 text-center border border-2 border-black" style="width: 140px">Status</th>
+                        <th class="px-2 py-2 text-center border border-2 border-black">Aksi</th>
+                        <th class="px-2 py-2 text-center border border-2 border-black">Update At</th>
                     </tr>
                 </thead>
             </table>
@@ -210,6 +239,17 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
         function calculateGapAndAch(input) {
             var row = input.closest('tr');
 
@@ -241,7 +281,49 @@
             statusElement.removeClass('bg-green-500 bg-red-500 bg-gray-500').addClass(colorClass);
         }
 
-        let isInitiate = true;
+        let table;
+
+        function validDate(e) {
+            const dateStart = document.getElementById("date_start").value;
+            const dateEnd = document.getElementById("date_end").value;
+
+            console.log(new Date(dateStart) < new Date(dateEnd))
+            if (new Date(dateStart) > new Date(dateEnd)) {                
+                Toast.fire({
+                    icon: "error",                    
+                    title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                    'prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else if (new Date(dateEnd) < new Date(dateStart)) {                
+                Toast.fire({
+                    icon: "error",
+                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',                    
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                    'prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else {
+                document.getElementById("date_start").setAttribute('prev-date', dateStart);
+                document.getElementById("date_end").setAttribute('prev-date', dateEnd);
+            }
+        }
+
+        function filterByDate() {
+            table.ajax.reload();
+        }
+
+        function resetFilter() {
+            document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
+            document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
+            table.ajax.reload();
+        }
+
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -249,24 +331,14 @@
                 }
             });
 
-            const Toast = Swal.mixin({
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.onmouseenter = Swal.stopTimer;
-                    toast.onmouseleave = Swal.resumeTimer;
-                }
-            });
-
-            var table = $('#data-table').DataTable({
+            table = $('#data-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('monitoring_do_spk.index') }}",
                     data: function(d) {
-                        d.isInitiate = isInitiate;
+                        d.start_date = $('#date_start').val();
+                        d.end_date = $('#date_end').val();
                     }
                 },
                 columns: [{
@@ -400,6 +472,8 @@
             });
 
             $('#data-table').on('click', '.save', function() {
+                $(this).prop('disabled', true);
+                $(this).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
                 var id = $(this).data('id');
                 var row = $(this).closest('tr');
                 var data = {};
@@ -430,6 +504,7 @@
                                 title: errorMessage,
                                 timer: 1500,
                             });
+                            $(this).prop('disabled', false);
                         }
                     },
                     error: function(response) {
@@ -458,6 +533,7 @@
                                 timer: 1500,
                             });
                         }
+                        $(this).prop('disabled', false);
                     }
                 });
             });
@@ -487,6 +563,8 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        $(this).prop('disabled', true);
+                        $(this).html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
                         $.ajax({
                             url: '/monitoring_do_spk/' + id,
                             method: 'DELETE',
@@ -504,6 +582,8 @@
                                     title: "An error occurred",
                                     timer: 1500,
                                 });
+                                $(this).prop('disabled', false);
+                                $(this).html('Delete <i class="ti ti-trash"></i>');
                             }
                         });
                     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use PhpParser\Node\Expr\Cast;
 
 class MonitoringDoSpk extends Model
 {
@@ -14,6 +15,10 @@ class MonitoringDoSpk extends Model
     protected $primaryKey = 'id_monitoring_do_spk';
     public $incrementing = false;
     protected $keyType = 'string';
+
+    protected $cast = [
+        'date' => 'date',
+    ];
 
     protected $fillable = [
         'nama_supervisor',
@@ -26,6 +31,7 @@ class MonitoringDoSpk extends Model
         'gap_spk',
         'ach_spk',
         'status',
+        'date',
     ];
 
     public function getAchDoAttribute($value)

@@ -17,6 +17,14 @@ class MonitoringDoSpkController extends Controller
         if ($request->ajax()) {
             $data = MonitoringDoSpk::query();
 
+            if ($request->start_date && $request->end_date) {
+                $data->whereBetween('date', [$request->start_date, $request->end_date]);
+            } elseif ($request->start_date) {
+                $data->where('date', '>=', $request->start_date);
+            } elseif ($request->end_date) {
+                $data->where('date', '<=', $request->end_date);
+            }
+
             $listSearch = [
                 'nama_supervisor' => ['nama_supervisor'],
                 'target_do' => ['target_do'],
@@ -72,7 +80,7 @@ class MonitoringDoSpkController extends Controller
 
                     $colorClass = $statusColors[$row->status] ?? 'bg-gray-500';
 
-                    return '<p class="mx-auto px-3 py-1 text-white rounded-lg status_text text-nowrap text-center ' . $colorClass . '" style="min-width: 140px;width: 140px">
+                    return '<p class="px-3 py-1 mx-auto text-center text-white rounded-lg status_text text-nowrap ' . $colorClass . '" style="min-width: 140px;width: 140px">
                         ' . ucfirst($row->status) . '
                     </p>';
                 })
@@ -87,7 +95,7 @@ class MonitoringDoSpkController extends Controller
                         Delete <i class="ti ti-trash"></i>
                     </button>';
 
-                    return '<div class="flex justify-center items-center gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
+                    return '<div class="flex items-center justify-center gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
                 ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action'])
                 ->order(function ($query) {
@@ -190,22 +198,24 @@ class MonitoringDoSpkController extends Controller
 
                 if (!$isAll) {
                     $existingData = MonitoringDoSpk::whereRaw('LOWER(nama_supervisor) = ?', [$namaSupervisor])
-                        ->orderBy('created_at', 'asc');
+                        ->orderBy('date', 'asc');
                 }
 
                 if ($request->type === MonitoringType::DO) {
-                    $existingData->where('act_do', null)->where('target_do', null);
+                    $existingData->where('act_do', null)->where('target_do', null)->where('date', $request->date);
                     $newData = new MonitoringDoSpk([
                         'nama_supervisor' => $row['nama_supervisor'],
                         'target_do' => $row['target_do'],
-                        'act_do' => $row['act_do']
+                        'act_do' => $row['act_do'],
+                        'date' => $request->date
                     ]);
                 } elseif ($request->type === MonitoringType::SPK) {
-                    $existingData->where('act_spk', null)->where('target_spk', null);
+                    $existingData->where('act_spk', null)->where('target_spk', null)->where('date', $request->date);
                     $newData = new MonitoringDoSpk([
                         'nama_supervisor' => $row['nama_supervisor'],
                         'target_spk' => $row['target_spk'],
-                        'act_spk' => $row['act_spk']
+                        'act_spk' => $row['act_spk'],
+                        'date' => $request->date
                     ]);
                 } else {
                     $newData = new MonitoringDoSpk([
@@ -213,7 +223,8 @@ class MonitoringDoSpkController extends Controller
                         'target_do' => $row['target_do'],
                         'act_do' => $row['act_do'],
                         'target_spk' => $row['target_spk'],
-                        'act_spk' => $row['act_spk']
+                        'act_spk' => $row['act_spk'],
+                        'date' => $request->date
                     ]);
                 }
 
@@ -228,14 +239,14 @@ class MonitoringDoSpkController extends Controller
                         if ($existingData->ach_do) {
                             $newData->save();
                         } else {
-                            $existingData->update($newData->only(['target_do', 'act_do', 'gap_do', 'ach_do']));
+                            $existingData->update($newData->only(['target_do', 'act_do', 'gap_do', 'ach_do', 'date', 'status']));
                             $newData = $existingData;
                         }
                     } elseif ($request->type === MonitoringType::SPK) {
                         if ($existingData->ach_spk) {
                             $newData->save();
                         } else {
-                            $existingData->update($newData->only(['target_spk', 'act_spk', 'gap_spk', 'ach_spk']));
+                            $existingData->update($newData->only(['target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'date', 'status']));
                             $newData = $existingData;
                         }
                     }
@@ -263,7 +274,6 @@ class MonitoringDoSpkController extends Controller
                 'act_do' => 'nullable|integer',
                 'target_spk' => 'nullable|integer',
                 'act_spk' => 'nullable|integer',
-                'status' => 'nullable|string',
             ]);
 
             if ($validator->fails()) {

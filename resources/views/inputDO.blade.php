@@ -26,11 +26,17 @@
 
     <div class="flex flex-col w-full max-w-6xl mt-6 space-y-4">
 
-        <div class="flex justify-start">
+        <div class="flex justify-between">
             <a href="{{ route('input.select') }}"
                 class="px-4 py-2 mb-2 text-white bg-green-500 rounded hover:bg-green-600">
                 Tambahkan Data
             </a>
+            {{-- select date --}}
+            <div class="flex items-center gap-3">
+                <label for="date" class="mr-2 text-lg font-bold text-gray-700">Pilih Tanggal:</label>
+                <input type="date" id="date" name="date" value="{{ date('Y-m-d') }}"
+                    class="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-500">
+            </div>
         </div>
 
         <div class="flex flex-col items-center justify-center p-6 bg-green-800 rounded-lg shadow-md">
@@ -215,8 +221,8 @@
         });
 
         document.getElementById("submit-button").addEventListener("click", function() {
-            this.disabled = true;
-            this.innerText = "Saving...";
+            $(this).prop('disabled', true);
+            $(this).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
             const data = [];
             document.querySelectorAll(".data-row").forEach((row) => {
                 const dataRow = {
@@ -233,7 +239,8 @@
 
             const requestBody = {
                 data: data,
-                type: 'DO'
+                type: 'DO',
+                date: document.getElementById('date').value,
             }
             fetch("{{ route('monitoring_do_spk.store') }}", {
                     method: "POST",
