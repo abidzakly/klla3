@@ -95,13 +95,16 @@
     function calculateGapAndAch(e) {
         // find tr parent
         const tr = e.closest('tr');
-        console.log(tr.querySelector('input[name="target_spk"]'))
-        const targetDo = parseFloat(tr.querySelector('input[name="target_spk"]').value) || 0;
-        const actDo = parseFloat(tr.querySelector('input[name="act_spk"]').value) || 0;
+        const targetDo = parseFloat(tr.querySelector('input[name="target_spk"]')?.value) || null;
+        const actDo = parseFloat(tr.querySelector('input[name="act_spk"]')?.value) || null;
         const gapDo = actDo - targetDo;
         const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
-        tr.querySelector('input[name="gap_spk"]').value = gapDo.toFixed(2);
-        tr.querySelector('input[name="ach_spk"]').value = achDo.toFixed(2) + "%";
+        tr.querySelector('input[name="gap_spk"]').value = Math.round(gapDo);
+        tr.querySelector('input[name="ach_spk"]').value = Math.round(achDo) + "%";
+        if (targetDo == null && actDo == null) {
+            tr.querySelector('input[name="gap_spk"]').value = "";
+            tr.querySelector('input[name="ach_spk"]').value = "";
+        }
     };
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -121,6 +124,9 @@
                 let existingRows = tableBody.querySelectorAll(
                     ".data-row:not(:first-child)"); // Get existing rows
 
+                const nameColumn = ['nama_supervisor', 'target_spk', 'act_spk', 'gap_spk',
+                    'ach_spk'
+                ];
                 rows.forEach((data, rowIndex) => {
                     let targetRow = document.createElement(
                         "tr"); // Use existing row or create new
@@ -135,7 +141,17 @@
                         div.className = "m-2 bg-transparent text-white rounded-md";
                         let input = document.createElement("input");
                         input.className = "w-full bg-transparent px-1 text-center";
+                        input.name = nameColumn[targetRow.children.length];
                         input.type = "text";
+                        if (targetRow.children.length === 1 || targetRow.children
+                            .length === 2) {
+                            input.setAttribute('oninput', 'calculateGapAndAch(this)');
+                            input.type = "number";
+                        }
+                        if (targetRow.children.length === 3 || targetRow.children
+                            .length === 4) {
+                            input.readOnly = true;
+                        }
                         div.appendChild(input);
                         newCell.appendChild(div);
                         targetRow.appendChild(newCell);
@@ -151,23 +167,6 @@
                         if (targetColumnIndex < targetRow.children.length) {
                             let targetCell = targetRow.children[
                                 targetColumnIndex];
-                            const nameColumn = ['nama_supervisor', 'target_spk',
-                                'act_spk', 'gap_spk',
-                                'ach_spk'
-                            ];
-                            targetCell.querySelector("input").name = nameColumn[
-                                targetColumnIndex];
-                            if (targetColumnIndex === 3 || targetColumnIndex ===
-                                4) {
-                                targetCell.querySelector("input").readOnly =
-                                    true;
-                            }
-                            if (targetColumnIndex === 1 || targetColumnIndex ===
-                                2) {
-                                targetCell.querySelector("input").setAttribute(
-                                    'oninput', 'calculateGapAndAch(this)');
-                            }
-
                             if (targetColumnIndex === 1 || targetColumnIndex ===
                                 2 || targetColumnIndex == 0) {
                                 const $inputElement = $(targetCell).find(
@@ -184,7 +183,7 @@
                     tableBody.appendChild(targetRow);
 
                     targetRow.querySelectorAll('input').forEach(input => {
-                        input.dispatchEvent(new Event('input'));
+                        calculateGapAndAch(input);
                     });
                 });
             });
@@ -202,15 +201,19 @@
         });
 
         document.getElementById("submit-button").addEventListener("click", function() {
+            this.disabled = true;
+            this.innerText = "Saving...";
+
             const data = [];
             document.querySelectorAll(".data-row").forEach((row) => {
                 const dataRow = {
                     nama_supervisor: row.querySelector('input[name="nama_supervisor"]')
                         ?.value || '',
-                    target_spk: row.querySelector('input[name="target_spk"]')?.value || null,
+                    target_spk: row.querySelector('input[name="target_spk"]')?.value ||
+                        null,
                     act_spk: row.querySelector('input[name="act_spk"]')?.value || null,
-                    gap_spk: row.querySelector('input[name="gap_spk"]')?.value || null,
-                    ach_spk: row.querySelector('input[name="ach_spk"]')?.value || null,
+                    // gap_spk: row.querySelector('input[name="gap_spk"]')?.value || null,
+                    // ach_spk: row.querySelector('input[name="ach_spk"]')?.value || null,
                 };
 
                 data.push(dataRow);
@@ -231,6 +234,8 @@
                 .then(response => {
                     return response.json().then(data => {
                         if (!response.ok) {
+                            this.disabled = false;
+                            this.innerText = "Submit";
                             if (data.errors) {
                                 throw new Error(Object.values(data.errors).flat().join(
                                     '\n'));
@@ -253,23 +258,26 @@
                     } else {
                         Toast.fire({
                             icon: "success",
-                            title: 'Data DO created successfully.',
+                            title: 'Data SPK created successfully.',
                             timer: 1500,
                         }).then(() => {
                             window.location.href = "{{ route('dashboard') }}";
                         });
+                        this.innerText = "Submit";
                     }
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
-
+                    this.disabled = false;
+                    this.innerText = "Submit";
                     Toast.fire({
                         icon: "error",
                         title: error.message || 'Terjadi kesalahan yang tidak diketahui.',
                         timer: 3000,
                     });
-                });
+                })
         });
     });
 </script>
+
 </html>

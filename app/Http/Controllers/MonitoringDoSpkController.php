@@ -28,6 +28,8 @@ class MonitoringDoSpkController extends Controller
                 'act_spk' => ['act_spk'],
                 'gap_spk' => ['gap_spk'],
                 'ach_spk' => ['ach_spk'],
+                'created_at' => ['created_at'],
+                'updated_at' => ['updated_at'],
             ];
 
             $data = self::filterDatatable($data, $listSearch);
@@ -46,8 +48,7 @@ class MonitoringDoSpkController extends Controller
                     return '<div class="editable" data-name="gap_do">' . $row->gap_do . '</div>';
                 })
                 ->addColumn('ach_do', function ($row) {
-                    $format = $row->ach_do ? number_format($row->ach_do, 2) : 0;
-                    $format = $format ? $format . '%' : 0;
+                    $format = $row->ach_do ? $row->ach_do . '%' : 0;
                     return '<div class="editable" data-name="ach_do">' . $format . '</div>';
                 })
                 ->addColumn('target_spk', function ($row) {
@@ -60,23 +61,33 @@ class MonitoringDoSpkController extends Controller
                     return '<div class="editable" data-name="gap_spk">' . $row->gap_spk . '</div>';
                 })
                 ->addColumn('ach_spk', function ($row) {
-                    $format = $row->ach_spk ? number_format($row->ach_spk, 2) : 0;
-                    $format = $format ? $format . '%' : 0;
+                    $format = $row->ach_spk ? $row->ach_spk . '%' : 0;
                     return '<div class="editable" data-name="ach_spk">' . $format . '</div>';
                 })
                 ->addColumn('status', function ($row) {
-                    return '<div class="editable" data-name="status">' . $row->status . '</div>';
+                    $statusColors = [
+                        StatusMonitoringDoSpk::ON_THE_TRACK => 'bg-green-500',
+                        StatusMonitoringDoSpk::PUSH_SPK => 'bg-red-500',
+                    ];
+
+                    $colorClass = $statusColors[$row->status] ?? 'bg-gray-500';
+
+                    return '<p class="mx-auto px-3 py-1 text-white rounded-lg status_text text-nowrap text-center ' . $colorClass . '" style="min-width: 140px;width: 140px">
+                        ' . ucfirst($row->status) . '
+                    </p>';
                 })
                 ->addColumn('action', function ($row) {
-                    $editButton = '<button class="flex items-center justify-center gap-2 btn-custom edit btn" data-id="' . $row->id_monitoring_do_spk . '">
+                    $editButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-green-500 rounded-lg hover:bg-green-600 edit" 
+                        data-id="' . $row->id_monitoring_do_spk . '">
                         Edit <i class="ti ti-edit"></i>
                     </button>';
 
-                    $deleteButton = '<button class="flex items-center justify-center gap-2 btn-custom delete btn" data-id="' . $row->id_monitoring_do_spk . '">
+                    $deleteButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-red-500 rounded-lg hover:bg-red-600 delete" 
+                        data-id="' . $row->id_monitoring_do_spk . '">
                         Delete <i class="ti ti-trash"></i>
                     </button>';
 
-                    return '<div class="action-buttons" style="display: flex; gap: 0.5rem;">' . $editButton . ' ' . $deleteButton . '</div>';
+                    return '<div class="flex justify-center items-center gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
                 ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action'])
                 ->order(function ($query) {
@@ -84,8 +95,6 @@ class MonitoringDoSpkController extends Controller
                         $order = request('order')[0];
                         $columns = request('columns');
                         $query->orderBy($columns[$order['column']]['data'], $order['dir']);
-                    } else {
-                        $query->orderByDesc('created_at'); // Default order by latest
                     }
                 })
                 ->make(true);
@@ -161,13 +170,18 @@ class MonitoringDoSpkController extends Controller
         try {
             foreach ($request->data as $key => $row) {
 
-                if ($key == 0 && in_array(null, $row, true)) {
-                    continue;
-                }
+                if ($key == 0 && count($request->data) > 1) {
+                    $isFilled = array_filter($row);
 
-                // dd(in_array(null, $row));
-                if(in_array(null, $row)) {
-                    return response()->json(['message' => 'Data ' . $request->type . ' gagal disimpan. Pastikan semua data terisi.'], 422);
+                    if ($isFilled && in_array(null, $row)) {
+                        return response()->json(['message' => 'Data ' . $request->type . ' gagal disimpan. Pastikan semua data terisi.'], 422);
+                    }
+
+                    continue;
+                } else {
+                    if (in_array(null, $row)) {
+                        return response()->json(['message' => 'Data ' . $request->type . ' gagal disimpan. Pastikan semua data terisi.'], 422);
+                    }
                 }
 
                 $namaSupervisor = strtolower($row['nama_supervisor']);
@@ -258,7 +272,6 @@ class MonitoringDoSpkController extends Controller
 
             $dataUodate = new MonitoringDoSpk($request->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk']));
             $dataUpdate = $this->calculateStatus($dataUodate, 'all');
-            // dd($dataUpdate->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'gap_do', 'ach_do', 'gap_spk', 'ach_spk', 'status']));
             $data->update($dataUpdate->only(['nama_supervisor', 'target_do', 'act_do', 'target_spk', 'act_spk', 'gap_do', 'ach_do', 'gap_spk', 'ach_spk', 'status']));
 
             return response()->json(['message' => 'Data berhasil diperbarui.']);

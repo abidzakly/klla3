@@ -56,7 +56,6 @@
         }
 
         .btn-custom {
-            background-color: #6b7280;
             /* Warna abu-abu */
             color: white;
             /* Teks putih */
@@ -72,9 +71,20 @@
             /* Animasi hover */
         }
 
-        .btn-custom:hover {
-            background-color: #4b5563;
-            /* Warna abu-abu lebih gelap saat hover */
+        #data-table {
+            border-collapse: collapse;
+            /* Menggabungkan border */
+            width: 100%;
+            /* Lebar penuh */
+        }
+
+        #data-table th,
+        #data-table td {
+            border: 1px solid black;
+            /* Garis horizontal dan vertikal */
+            padding: 8px;
+            /* Jarak antar konten */
+            text-align: center;
         }
     </style>
 </head>
@@ -97,16 +107,18 @@
             {{-- lastType --}}
             @if ($lastType == 'DO')
                 <a href="{{ route('inputDO') }}">
-                    <button type="button" class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                    <button type="button"
+                        class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                         Tambahkan Data DO
-                    </button>    
-                </a>  
+                    </button>
+                </a>
             @elseif ($lastType == 'SPK')
                 <a href="{{ route('inputSPK') }}">
-                    <button type="button" class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
+                    <button type="button"
+                        class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                         Tambahkan Data SPK
-                    </button>    
-                </a>          
+                    </button>
+                </a>
             @endif
 
             {{-- <div class="p-6 overflow-x-auto bg-green-800 rounded-lg shadow-md">
@@ -186,8 +198,9 @@
                         <th class="px-2 py-2 border border-2 border-black">ACT SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
                         <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
-                        <th class="px-2 py-2 border border-2 border-black">Status</th>
-                        <th class="px-2 py-2 border border-2 border-black">Aksi</th>
+                        <th class="px-2 py-2 border border-2 border-black text-center" style="width: 140px">Status</th>
+                        <th class="px-2 py-2 border border-2 border-black text-center">Aksi</th>
+                        <th class="px-2 py-2 border border-2 border-black text-center">Update At</th>
                     </tr>
                 </thead>
             </table>
@@ -211,19 +224,24 @@
             // Hitung Gap & Achievement DO jika input yang diubah adalah act_do
             var gap_do = act_do - target_do;
             var ach_do = target_do > 0 ? (act_do / target_do) * 100 : 0;
-            row.find('[name="gap_do"]').val(gap_do.toFixed(2));
-            row.find('[name="ach_do"]').val(ach_do.toFixed(2) + '%');
+            row.find('[name="gap_do"]').val(Math.round(gap_do));
+            row.find('[name="ach_do"]').val(Math.round(ach_do) + '%');
 
             // Hitung Gap & Achievement SPK jika input yang diubah adalah act_spk
             var gap_spk = act_spk - target_spk;
             var ach_spk = target_spk > 0 ? (act_spk / target_spk) * 100 : 0;
-            row.find('[name="gap_spk"]').val(gap_spk.toFixed(2));
-            row.find('[name="ach_spk"]').val(ach_spk.toFixed(2) + '%');
+            row.find('[name="gap_spk"]').val(Math.round(gap_spk));
+            row.find('[name="ach_spk"]').val(Math.round(ach_spk) + '%');
 
             var status = ach_do >= 100 ? 'ON THE TRACK' : 'PUSH SPK';
-            row.find('[name="status"]').val(status);
+            var colorClass = ach_do >= 100 ? 'bg-green-500' : 'bg-red-500';
+
+            const statusElement = row.find('.status_text');
+            statusElement.text(status);
+            statusElement.removeClass('bg-green-500 bg-red-500 bg-gray-500').addClass(colorClass);
         }
 
+        let isInitiate = true;
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -245,7 +263,12 @@
             var table = $('#data-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('monitoring_do_spk.index') }}",
+                ajax: {
+                    url: "{{ route('monitoring_do_spk.index') }}",
+                    data: function(d) {
+                        d.isInitiate = isInitiate;
+                    }
+                },
                 columns: [{
                         data: 'nama_supervisor',
                         name: 'nama_supervisor',
@@ -302,6 +325,13 @@
                         orderable: false,
                         searchable: false
                     },
+                    {
+                        data: 'updated_at',
+                        visible: false
+                    },
+                ],
+                order: [
+                    [11, 'desc']
                 ],
                 drawCallback: function(settings) {
                     // Pastikan semua tombol "edit" memiliki event handler yang benar setelah render ulang
@@ -317,21 +347,21 @@
                             var name = $(this).data('name');
                             var tdWidth = $(this)
                                 .width(); // Ambil width td sebelum diubah menjadi input
-                                                       
+
                             if (name === 'gap_do' || name === 'ach_do' || name ===
                                 'gap_spk' || name === 'ach_spk' || name === 'status') {
                                 if (name == 'ach_do' || name == 'ach_spk' || name ==
                                     'status' || name == 'gap_do' || name == 'gap_spk') {
                                     // value = value.replace('%', '');
                                     tdWidth = tdWidth + 40;
-                                    if (name == 'status') {
-                                        tdWidth = tdWidth + 40;
-                                    }
                                 }
                                 $(this).html('<input type="text" name="' + name +
                                     '" value="' + value +
                                     '" class="border border-gray-300 form-control editable" style="width:' +
-                                    tdWidth + 'px;" readonly data-current-value="' + value + '">');
+                                    tdWidth + 'px;" readonly data-current-value="' +
+                                    value + '">');
+                            } else if (name == undefined) {
+
                             } else {
                                 $(this).html('<input type="text" name="' + name +
                                     '" value="' + value +
@@ -345,21 +375,19 @@
                         row.find('.edit').hide();
                         row.find('.delete').hide();
                         row.find('.action-buttons').append(
-                            '<button class="flex items-center gap-2 save btn btn-custom" data-id="' +
+                            '<button class="flex items-center gap-2 px-4 py-2 text-white bg-green-500 rounded-lg save btn btn-custom hover:bg-green-600" data-id="' +
                             id + '">' +
                             '<i class="ti ti-check"></i> Save' +
                             '</button>'
                         );
                         row.find('.action-buttons').append(
-                            '<button class="flex items-center gap-2 cancel btn btn-custom" data-id="' +
+                            '<button class="flex items-center gap-2 px-4 py-2 text-white bg-red-500 rounded-lg cancel btn btn-custom hover:bg-red-600" data-id="' +
                             id + '">' +
                             '<i class="ti ti-x"></i> Cancel' +
                             '</button>'
                         );
-
                     });
                 },
-                order: [[0, 'desc']],
                 // columnDefs: [{
                 //         width: '150px',
                 //         targets: [0]
@@ -406,7 +434,13 @@
                     },
                     error: function(response) {
                         response = response.responseJSON;
-                        if (!response?.errors) {
+                        if (response?.message === "CSRF token mismatch.") {
+                            Toast.fire({
+                                icon: "error",
+                                title: "Token tidak valid, mohon refresh page",
+                                timer: 3000,
+                            });
+                        } else if (!response?.errors) {
                             Toast.fire({
                                 icon: "error",
                                 title: "An error occurred",
@@ -432,13 +466,13 @@
                 var row = $(this).closest('tr');
                 // attach data-current-value attribute to input
                 row.find('.editable').each(function() {
-                    var value = $(this).find('input').data('current-value');                                        
+                    var value = $(this).find('input').data('current-value');
                     $(this).html(value);
                 });
                 row.find('.save').remove();
                 row.find('.cancel').remove();
                 row.find('.edit').show();
-                row.find('.delete').show();               
+                row.find('.delete').show();
             });
 
             $('#data-table').on('click', '.delete', function() {

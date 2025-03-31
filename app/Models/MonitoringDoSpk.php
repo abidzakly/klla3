@@ -27,4 +27,24 @@ class MonitoringDoSpk extends Model
         'ach_spk',
         'status',
     ];
+
+    public function getAchDoAttribute($value)
+    {
+        return (int) $value;
+    }
+
+    public function getGapDoAttribute($value)
+    {
+        return (int) $value;
+    }
+
+    public function getAchSpkAttribute($value)
+    {
+        return (int) $value;
+    }
+
+    public function getGapSpkAttribute($value)
+    {
+        return (int) $value;
+    }
 }

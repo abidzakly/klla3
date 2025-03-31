@@ -96,12 +96,16 @@
     function calculateGapAndAch(e) {
         // find tr parent
         const tr = e.closest('tr');
-        const targetDo = parseFloat(tr.querySelector('input[name="target_do"]').value) || 0;
-        const actDo = parseFloat(tr.querySelector('input[name="act_do"]').value) || 0;
+        const targetDo = parseFloat(tr.querySelector('input[name="target_do"]')?.value) || null;
+        const actDo = parseFloat(tr.querySelector('input[name="act_do"]')?.value) || null;
         const gapDo = actDo - targetDo;
         const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
-        tr.querySelector('input[name="gap_do"]').value = gapDo.toFixed(2);
-        tr.querySelector('input[name="ach_do"]').value = achDo.toFixed(2) + "%";
+        tr.querySelector('input[name="gap_do"]').value = Math.round(gapDo);
+        tr.querySelector('input[name="ach_do"]').value = Math.round(achDo) + "%";
+        if(actDo == null && targetDo == null) {
+            tr.querySelector('input[name="gap_do"]').value = "";
+            tr.querySelector('input[name="ach_do"]').value = "";
+        }
     };
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -111,7 +115,6 @@
 
                 let clipboardData = event.clipboardData || window.clipboardData;
                 let pastedData = clipboardData.getData("text"); // Get pasted content
-                console.log(pastedData)
 
                 let rows = pastedData.trim().split("\n").map(row => row.split(
                     "\t")); // Split into rows & columns
@@ -122,6 +125,10 @@
                 let existingRows = tableBody.querySelectorAll(
                     ".data-row:not(:first-child)"); // Get existing rows
 
+                const nameColumn = ['nama_supervisor', 'target_do',
+                                'act_do', 'gap_do',
+                                'ach_do'
+                            ];
                 rows.forEach((data, rowIndex) => {
                     let targetRow = document.createElement(
                         "tr"); // Use existing row or create new
@@ -136,6 +143,17 @@
                         let input = document.createElement("input");
                         input.className = "w-full bg-transparent px-1 text-center";
                         input.type = "text";
+                        input.name = nameColumn[targetRow.children.length];
+                        if (targetRow.children.length === 1 || targetRow.children.length === 2) {
+                            input.setAttribute('oninput', 'calculateGapAndAch(this)');
+                            input.type = "number";
+                        }
+                        if (targetRow.children.length === 1 || targetRow.children.length === 2) {
+                            input.setAttribute('oninput', 'calculateGapAndAch(this)');
+                        }
+                        if (targetRow.children.length === 3 || targetRow.children.length === 4) {
+                            input.readOnly = true;
+                        }
                         div.appendChild(input);
                         newCell.appendChild(div);
                         targetRow.appendChild(newCell);
@@ -157,23 +175,6 @@
                         if (targetColumnIndex < targetRow.children.length) {
                             let targetCell = targetRow.children[
                                 targetColumnIndex];
-                            const nameColumn = ['nama_supervisor', 'target_do',
-                                'act_do', 'gap_do',
-                                'ach_do'
-                            ];
-                            targetCell.querySelector("input").name = nameColumn[
-                                targetColumnIndex];
-                            if (targetColumnIndex === 3 || targetColumnIndex ===
-                                4) {
-                                targetCell.querySelector("input").readOnly =
-                                    true;
-                            }
-                            if (targetColumnIndex === 1 || targetColumnIndex ===
-                                2) {
-                                targetCell.querySelector("input").setAttribute(
-                                    'oninput', 'calculateGapAndAch(this)');
-                            }
-
                             if (targetColumnIndex === 1 || targetColumnIndex ===
                                 2 || targetColumnIndex == 0) {
                                 const $inputElement = $(targetCell).find(
@@ -196,7 +197,7 @@
                     tableBody.appendChild(targetRow);
                     // trigger $inputElement.trigger('input');
                     targetRow.querySelectorAll('input').forEach(input => {
-                        input.dispatchEvent(new Event('input'));
+                        calculateGapAndAch(input);
                     });
                 });
             });
@@ -214,6 +215,8 @@
         });
 
         document.getElementById("submit-button").addEventListener("click", function() {
+            this.disabled = true;
+            this.innerText = "Saving...";
             const data = [];
             document.querySelectorAll(".data-row").forEach((row) => {
                 const dataRow = {
@@ -221,8 +224,8 @@
                         ?.value || '',
                     target_do: row.querySelector('input[name="target_do"]')?.value || null,
                     act_do: row.querySelector('input[name="act_do"]')?.value || null,
-                    gap_do: row.querySelector('input[name="gap_do"]')?.value || null,
-                    ach_do: row.querySelector('input[name="ach_do"]')?.value || null,
+                    // gap_do: row.querySelector('input[name="gap_do"]')?.value || null,
+                    // ach_do: row.querySelector('input[name="ach_do"]')?.value || null,
                 };
 
                 data.push(dataRow);
@@ -243,6 +246,8 @@
                 .then(response => {
                     return response.json().then(data => {
                         if (!response.ok) {
+                            this.disabled = false;
+                            this.innerText = "Submit";
                             if(data.errors) {
                                 throw new Error(Object.values(data.errors).flat().join('\n'));
                             }
@@ -269,11 +274,13 @@
                         }).then(() => {
                             window.location.href = "{{ route('dashboard') }}";
                         });
+                        this.innerText = "Submit";
                     }
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
-
+                    this.disabled = false;
+                    this.innerText = "Submit";
                     Toast.fire({
                         icon: "error",
                         title: error.message || 'Terjadi kesalahan yang tidak diketahui.',
