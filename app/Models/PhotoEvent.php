@@ -18,6 +18,18 @@ class PhotoEvent extends Model
 
     ];
 
+    protected $appends = ['file_name'];
+
+    public function getFileNameAttribute()
+    {
+        return pathinfo($this->file_path, PATHINFO_FILENAME);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id_branch');
+    }
+
     public function photoEventType()
     {
         return $this->belongsTo(PhotoEventType::class, 'photo_event_type_id', 'id_photo_event_type');

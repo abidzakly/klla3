@@ -1,6 +1,6 @@
 <div class="bg-[#d9d9d9] flex flex-col h-50">
     <div class="flex justify-between mx-2 gap-4">
-        <p class="text-black truncate" id="file-name-text" data-id="{{ $row->id }}" data-current-value="{{ $row->getFileName() }}">{{ $row->getFileName() }}</p>
+        <p class="text-black truncate" id="file-name-text" data-id="{{ $row->id }}" data-current-value="{{ $row->file_name}}">{{ $row->file_name}}</p>
         <div class="relative">
             <i style="font-size: 20px;" class="mt-1 fa-solid fa-ellipsis-vertical cursor-pointer file-options-button text-black"></i>
             <div class="file-options-menu hidden absolute mt-2 bg-white shadow-lg rounded-lg w-40 overflow-hidden transition-all duration-300 opacity-0 transform scale-95">
