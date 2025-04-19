@@ -92,7 +92,7 @@ class PhotoEventController extends Controller
             'photo_event_date.*'        => 'required|date',
 
             'files'                     => 'required|array',
-            'files.*'                   => 'required|file|mimes:jpg,jpeg,png,svg,pdf|max:10240',
+            'files.*'                   => 'required|file|mimes:jpg,jpeg,png,svg|max:10240',
         ], [
             'branch_id.required' => 'Cabang wajib dipilih.',
             'branch_id.ulid' => 'Format cabang tidak valid.',

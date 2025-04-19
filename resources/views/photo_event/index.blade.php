@@ -196,7 +196,7 @@
                     class="cursor-pointer flex items-center gap-2 ml-auto text-white text-lg font-bold">
                     <i class="fa-solid fa-plus"></i>
                     <span>Upload Foto</span>
-                    <input type="file" id="imageUpload" class="hidden" accept="image/*" multiple>
+                    <input type="file" id="imageUpload" class="hidden" accept=".jpg,.jpeg,.png,.svg," multiple>
                 </label>
             </div>
 
@@ -208,7 +208,7 @@
                     <p>atau</p>
                     <p>gunakan tombol "+"</p>
 
-                    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+                    <input type="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png,.svg," multiple>
                 </div>
             @else
                 <div class="overflow-x-auto rounded-lg mt-4 w-full" id="child-drop-area">
@@ -219,7 +219,7 @@
                             </tr>
                         </thead>
                     </table>
-                    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+                    <input type="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png,.svg," multiple>
                 </div>
             @endif
         </div>
@@ -233,12 +233,12 @@
             <form id="fileForm" enctype="multipart/form-data">
                 <div id="fileDetailsContainer" class="space-y-4 max-h-[40vh] overflow-y-auto"></div>
                 <div class="flex justify-end space-x-2 mt-4">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Submit dan Upload
+                    </button>
                     <button type="button" onclick="closeFileModal()"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
                         Tutup
-                    </button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                        Submit dan Upload
                     </button>
                 </div>
             </form>
@@ -250,7 +250,11 @@
         class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="bg-white rounded-lg p-4 w-96">
             <img id="previewImage" src="" alt="Preview" class="w-full h-auto rounded">
-            <button onclick="closePreviewModal()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Tutup</button>
+            <div class="flex justify-end">
+                <button onclick="closePreviewModal()" class="bg-red-500 text-white px-4 py-2 rounded">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 
@@ -275,6 +279,9 @@
         });
     function closeFileModal() {
         $("#fileModal").addClass("hidden").removeClass("flex");
+        // reset uploadedFiles input file-input and imageUpload
+        $("#file-input").val('');
+        $("#imageUpload").val('');
         uploadedFiles = []; // Reset array uploadedFiles
         $("#fileDetailsContainer").empty(); // Bersihkan kontainer detail
     }
