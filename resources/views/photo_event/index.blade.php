@@ -233,13 +233,13 @@
             <form id="fileForm" enctype="multipart/form-data">
                 <div id="fileDetailsContainer" class="space-y-4 max-h-[40vh] overflow-y-auto"></div>
                 <div class="flex justify-end space-x-2 mt-4">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                        Submit dan Upload
-                    </button>
                     <button type="button" onclick="closeFileModal()"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
-                        Tutup
-                    </button>
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Tutup
+                </button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    Submit dan Upload
+                </button>
                 </div>
             </form>
         </div>
@@ -268,15 +268,16 @@
     let uploadedFiles = []; // Untuk menyimpan file dan metadata
     let table = null;
     const Toast = Swal.mixin({
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.onmouseenter = Swal.stopTimer;
-                toast.onmouseleave = Swal.resumeTimer;
-            }
-        });
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
+
     function closeFileModal() {
         $("#fileModal").addClass("hidden").removeClass("flex");
         // reset uploadedFiles input file-input and imageUpload
@@ -293,49 +294,49 @@
     }
 
     function validDate(e) {
-            const dateStart = document.getElementById("date_start").value;
-            const dateEnd = document.getElementById("date_end").value;
+        const dateStart = document.getElementById("date_start").value;
+        const dateEnd = document.getElementById("date_end").value;
 
-            console.log(new Date(dateStart) < new Date(dateEnd))
-            if (new Date(dateStart) > new Date(dateEnd)) {
-                Toast.fire({
-                    icon: "error",
-                    title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
-                    timer: 3000,
-                });
+        console.log(new Date(dateStart) < new Date(dateEnd))
+        if (new Date(dateStart) > new Date(dateEnd)) {
+            Toast.fire({
+                icon: "error",
+                title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
+                timer: 3000,
+            });
 
-                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
-                    'prev-date');
-                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
-            } else if (new Date(dateEnd) < new Date(dateStart)) {
-                Toast.fire({
-                    icon: "error",
-                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
-                    timer: 3000,
-                });
+            document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                'prev-date');
+            document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+        } else if (new Date(dateEnd) < new Date(dateStart)) {
+            Toast.fire({
+                icon: "error",
+                title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
+                timer: 3000,
+            });
 
-                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
-                    'prev-date');
-                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
-            } else {
-                document.getElementById("date_start").setAttribute('prev-date', dateStart);
-                document.getElementById("date_end").setAttribute('prev-date', dateEnd);
-            }
+            document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                'prev-date');
+            document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+        } else {
+            document.getElementById("date_start").setAttribute('prev-date', dateStart);
+            document.getElementById("date_end").setAttribute('prev-date', dateEnd);
         }
+    }
 
-        function filterByDate(e) {
-            $(this).prop('disabled', true);
-            $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
-            table.ajax.reload();
-            $('#filter-button').prop('disabled', false);
-            $('#filter-button').html('Filter');
-        }
+    function filterByDate(e) {
+        $(this).prop('disabled', true);
+        $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+        table.ajax.reload();
+        $('#filter-button').prop('disabled', false);
+        $('#filter-button').html('Filter');
+    }
 
-        function resetFilter() {
-            document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
-            document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
-            table.ajax.reload();
-        }
+    function resetFilter() {
+        document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
+        document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
+        table.ajax.reload();
+    }
 
     $(document).ready(function() {
         const $dropArea = $("#drop-area");
@@ -375,6 +376,11 @@
             const container = $("#fileDetailsContainer");
             container.empty();
 
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const localDate = `${year}-${month}-${day}`;
             uploadedFiles.forEach((file, index) => {
                 const html = `
         <div class="border p-4 rounded-md space-y-2 bg-gray-50">
@@ -410,7 +416,7 @@
             <div class="mb-2">
                 <label class="block text-sm font-medium text-gray-700">Tanggal Event</label>
                 <input type="date" name="photo_event_date_${index}"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${new Date().toISOString().split('T')[0]}"/>
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${localDate}"/>
                     <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
             </div>
         </div>
@@ -601,7 +607,7 @@
                                 if (input.length === 0) {
                                     input = $(`[name="${inputName}"]`).eq(
                                         i
-                                        ); // fallback: cari berdasarkan nama array biasa
+                                    ); // fallback: cari berdasarkan nama array biasa
                                 }
 
                                 // Tambahkan error feedback
