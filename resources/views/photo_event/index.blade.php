@@ -113,6 +113,11 @@
         .editable-textarea[readonly] {
             border: none;
         }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            /* Membuat ikon menjadi putih */
+        }
     </style>
 </head>
 
@@ -128,6 +133,26 @@
             <button id="branchDropdownButton" class="text-xl font-bold text-white bg-green-600 px-6 py-2 rounded-lg">
                 {{ $branch->branch_name }} ▼
             </button>
+
+            {{-- filter date start from and end from --}}
+            <div class="flex items-center gap-4 ml-auto px-4 py-3 rounded bg-green-600">
+                <label for="date_start" class="">Tanggal Awal:</label>
+                <input type="date" id="date_start" name="date_start" value="{{ date('Y-m-d') }}"
+                    prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))" class="px-2 py-1 text-white  rounded">
+                <label for="date_end" class="">Tanggal Akhir:</label>
+                <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
+                    prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))" class="px-2 py-1  rounded">
+                <div class="flex items-center gap-2">
+                    <button type="button" id="filter-button" onclick="filterByDate($(this))"
+                        class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-800">
+                        Filter
+                    </button>
+                    <button type="button" id="reset-button" onclick="resetFilter()"
+                        class="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600">
+                        Reset
+                    </button>
+                </div>
+            </div>
 
             <div id="branchDropdownMenu"
                 class="hidden absolute left-0 mt-2 bg-white shadow-lg rounded-lg w-52 max-h-60 overflow-y-auto transition-all duration-300 opacity-0 transform scale-95">
@@ -175,7 +200,7 @@
                 </label>
             </div>
 
-            @if ($photoEvents->isEmpty())
+            @if ($photoEvents == 0)
                 <div id="child-drop-area"
                     class="text-white text-3xl font-bold relative flex flex-col w-full mt-40 gap-4 justify-center items-center  p-10 cursor-pointer focus:outline-none">
                     <i class="fa-regular fa-file text-white" style="font-size:56px;"></i>
@@ -199,14 +224,46 @@
             @endif
         </div>
     </div>
+
+    <!-- Modal untuk input detail file -->
+    <div id="fileModal" tabindex="-1"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-lg p-4 w-96">
+            <h2 class="text-lg font-bold mb-4">Detail File</h2>
+            <form id="fileForm" enctype="multipart/form-data">
+                <div id="fileDetailsContainer" class="space-y-4 max-h-[40vh] overflow-y-auto"></div>
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button type="button" onclick="closeFileModal()"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Tutup
+                    </button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Submit dan Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk pratinjau gambar -->
+    <div id="previewModal" tabindex="-1"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-lg p-4 w-96">
+            <img id="previewImage" src="" alt="Preview" class="w-full h-auto rounded">
+            <button onclick="closePreviewModal()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Tutup</button>
+        </div>
+    </div>
+
 </body>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
 <script>
-    $(document).ready(function() {
-        const Toast = Swal.mixin({
+    let uploadedFiles = []; // Untuk menyimpan file dan metadata
+    let table = null;
+    const Toast = Swal.mixin({
             toast: true,
             position: "top-end",
             showConfirmButton: false,
@@ -216,96 +273,349 @@
                 toast.onmouseleave = Swal.resumeTimer;
             }
         });
+    function closeFileModal() {
+        $("#fileModal").addClass("hidden").removeClass("flex");
+        uploadedFiles = []; // Reset array uploadedFiles
+        $("#fileDetailsContainer").empty(); // Bersihkan kontainer detail
+    }
 
+    function closePreviewModal() {
+        const previewModal = document.getElementById('previewModal');
+        previewModal.classList.add('hidden');
+        document.getElementById('previewImage').src = '';
+    }
+
+    function validDate(e) {
+            const dateStart = document.getElementById("date_start").value;
+            const dateEnd = document.getElementById("date_end").value;
+
+            console.log(new Date(dateStart) < new Date(dateEnd))
+            if (new Date(dateStart) > new Date(dateEnd)) {
+                Toast.fire({
+                    icon: "error",
+                    title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                    'prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else if (new Date(dateEnd) < new Date(dateStart)) {
+                Toast.fire({
+                    icon: "error",
+                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+                    'prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else {
+                document.getElementById("date_start").setAttribute('prev-date', dateStart);
+                document.getElementById("date_end").setAttribute('prev-date', dateEnd);
+            }
+        }
+
+        function filterByDate(e) {
+            $(this).prop('disabled', true);
+            $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+            table.ajax.reload();
+            $('#filter-button').prop('disabled', false);
+            $('#filter-button').html('Filter');
+        }
+
+        function resetFilter() {
+            document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
+            document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
+            table.ajax.reload();
+        }
+
+    $(document).ready(function() {
         const $dropArea = $("#drop-area");
         const $fileInput = $("#file-input");
         const $imageUpload = $("#imageUpload");
         const $childDropArea = $("#child-drop-area");
         const $uploadingMessage = $("#uploading-message");
         let isUploading = false;
-        let table = null;
 
         function handleFiles(files) {
-            if (isUploading) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const previewUrl = URL.createObjectURL(file);
+
+                uploadedFiles.push({
+                    file,
+                    previewUrl,
+                    photo_event_file_name: file.name,
+                    photo_event_name: '',
+                    photo_event_location: '',
+                    photo_event_caption: '',
+                    photo_event_date: ''
+                });
+            }
+
+            renderFileDetailModal(); // Langsung buka modal isi detail
+        }
+
+        function openPreviewModal(imageUrl) {
+            const previewImage = document.getElementById('previewImage');
+            const previewModal = document.getElementById('previewModal');
+            previewImage.src = imageUrl;
+            previewModal.classList.remove('hidden');
+        }
+
+        function renderFileDetailModal() {
+            const container = $("#fileDetailsContainer");
+            container.empty();
+
+            uploadedFiles.forEach((file, index) => {
+                const html = `
+        <div class="border p-4 rounded-md space-y-2 bg-gray-50">
+            <h3 class="preview-link truncate font-semibold text-lg mb-2 text-blue-600 cursor-pointer hover:underline"
+    data-url="${file.previewUrl}">
+    File ${index + 1}: ${file.photo_event_file_name}
+</h3>
+    
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Nama File Photo</label>
+                <input type="text" name="event_file_name_${index}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${file.photo_event_file_name.split('.')[0]}"/>
+                    <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700">Nama Event</label>
+                <input type="text" name="photo_event_name_${index}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700">Lokasi Event</label>
+                <input type="text" name="photo_event_location_${index}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                    <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700">Caption</label>
+                <textarea name="photo_event_caption_${index}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                    <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700">Tanggal Event</label>
+                <input type="date" name="photo_event_date_${index}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="${new Date().toISOString().split('T')[0]}"/>
+                    <p class="mb-2 invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+        </div>
+    `;
+                container.append(html);
+            });
+
+            $(document).on('click', '.preview-link', function() {
+                const url = $(this).data('url');
+                openPreviewModal(url);
+            });
+
+            $("#fileModal").removeClass("hidden").addClass("flex"); // Tampilkan modal
+        }
+
+        function onSubmitModal(e) {
+            e.preventDefault();
+            // Ambil semua input dan update di uploadedFiles[]
+            uploadedFiles.forEach((file, index) => {
+                file.photo_event_file_name = $(`input[name="event_file_name_${index}"]`).val();
+                file.photo_event_name = $(`input[name="photo_event_name_${index}"]`).val();
+                file.photo_event_location = $(`input[name="photo_event_location_${index}"]`).val();
+                file.photo_event_caption = $(`textarea[name="photo_event_caption_${index}"]`).val();
+                file.photo_event_date = $(`input[name="photo_event_date_${index}"]`).val();
+            });
+
+            // Lanjut ke upload
+            uploadAllFiles();
+        }
+
+        // add event listener submit fileForm
+        $("#fileForm").on("submit", onSubmitModal);
+
+
+        // function handleFiles(files) {
+        //     if (isUploading) {
+        //         Swal.fire({
+        //             icon: 'info',
+        //             title: 'Upload sedang berlangsung',
+        //             text: 'Mohon menunggu...',
+        //             timer: 3000,
+        //             showConfirmButton: false
+        //         });
+        //         return;
+        //     }
+
+        //     if (files.length > 0) {
+        //         Toast.fire({
+        //             icon: "info",
+        //             title: "Proses upload sedang berlangsung..., mohon tunggu",
+        //             timer: 3000,
+        //         });
+        //         $imageUpload.disabled = true;
+        //         $imageUpload.textContent = 'Uploading...';
+        //         isUploading = true;
+        //         $uploadingMessage.removeClass('hidden');
+        //         const formData = new FormData();
+        //         for (let i = 0; i < files.length; i++) {
+        //             formData.append('files[]', files[i]);
+        //         }
+        //         formData.append('photo_event_type_id', '{{ $photoEventType->id_photo_event_type }}');
+        //         formData.append('branch_id', document.getElementById('branchId').value);
+        //         formData.append('_token', '{{ csrf_token() }}');
+
+        //         $.ajax({
+        //             url: '{{ route('photo-event.store', $photoEventType) }}',
+        //             type: 'POST',
+        //             data: formData,
+        //             processData: false,
+        //             contentType: false,
+        //             success: function(response) {
+        //                 if (!response.error) {
+        //                     Swal.fire({
+        //                         icon: 'success',
+        //                         title: 'Upload berhasil',
+        //                         text: response.message,
+        //                         timer: 1500,
+        //                         showConfirmButton: false
+        //                     }).then(() => {
+        //                         if (table) {
+        //                             table.ajax.reload(null, false);
+        //                         } else {
+        //                             location.reload();
+        //                         }
+        //                         isUploading = false;
+        //                     });
+        //                 } else {
+        //                     Swal.fire({
+        //                         icon: 'error',
+        //                         title: 'Error',
+        //                         text: response.message,
+        //                         timer: 1500,
+        //                         showConfirmButton: false
+        //                     });
+        //                 }
+        //             },
+        //             error: function(response) {
+        //                 Swal.fire({
+        //                     icon: 'error',
+        //                     title: 'Error',
+        //                     text: 'Error uploading files',
+        //                     timer: 1500,
+        //                     showConfirmButton: false
+        //                 });
+        //                 isUploading = false;
+        //                 $uploadingMessage.addClass('hidden');
+        //             }
+        //         }).always(() => {
+        //             $imageUpload.disabled = false;
+        //             $imageUpload.textContent = 'Upload Foto';
+        //             $fileInput.val('');
+        //             $imageUpload.val('');
+        //         });
+        //     }
+        // }
+
+        function uploadAllFiles() {
+            if (uploadedFiles.length === 0) {
                 Swal.fire({
-                    icon: 'info',
-                    title: 'Upload sedang berlangsung',
-                    text: 'Mohon menunggu...',
-                    timer: 3000,
-                    showConfirmButton: false
+                    icon: 'warning',
+                    title: 'Tidak ada file',
+                    text: 'Silakan upload file terlebih dahulu.',
                 });
                 return;
             }
 
-            if (files.length > 0) {
-                Toast.fire({
-                    icon: "info",
-                    title: "Proses upload sedang berlangsung..., mohon tunggu",
-                    timer: 3000,
-                });
-                $imageUpload.disabled = true;
-                $imageUpload.textContent = 'Uploading...';
-                isUploading = true;
-                $uploadingMessage.removeClass('hidden');
-                const formData = new FormData();
-                for (let i = 0; i < files.length; i++) {
-                    formData.append('files[]', files[i]);
-                }
-                formData.append('photo_event_type_id', '{{ $photoEventType->id_photo_event_type }}');
-                formData.append('branch_id', document.getElementById('branchId').value);
-                formData.append('_token', '{{ csrf_token() }}');
+            const formData = new FormData();
 
-                $.ajax({
-                    url: '{{ route('photo-event.store', $photoEventType) }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (!response.error) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Upload berhasil',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => {
-                                if (table) {
-                                    table.ajax.reload(null, false);
-                                } else {
-                                    location.reload();
-                                }
-                                isUploading = false;
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
+            uploadedFiles.forEach((fileData) => {
+                formData.append('files[]', fileData.file);
+                formData.append('photo_event_file_name[]', fileData.photo_event_file_name);
+                formData.append('photo_event_name[]', fileData.photo_event_name);
+                formData.append('photo_event_location[]', fileData.photo_event_location);
+                formData.append('photo_event_caption[]', fileData.photo_event_caption);
+                formData.append('photo_event_date[]', fileData.photo_event_date);
+            });
+
+            formData.append('photo_event_type_id', '{{ $photoEventType->id_photo_event_type }}');
+            formData.append('branch_id', $('#branchId').val());
+            formData.append('_token', '{{ csrf_token() }}');
+
+            $.ajax({
+                url: '{{ route('photo-event.store', $photoEventType) }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: () => {
+                    Swal.fire({
+                        title: 'Uploading...',
+                        html: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
-                    },
-                    error: function(response) {
+                    });
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Upload berhasil',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // reload table
+                        if (table) {
+                            table.ajax.reload(null, false);
+                            closeFileModal();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+
+                        // Bersihkan semua pesan error sebelumnya
+                        $('.invalid-feedback').remove();
+                        $('.is-invalid').removeClass('is-invalid');
+
+                        Object.keys(errors).forEach((key) => {
+                            errors[key].forEach((msg, i) => {
+                                let inputName = key.replace(/\./g, '_');
+
+                                let input = $(`[name="${inputName}"]`);
+                                if (input.length === 0) {
+                                    input = $(`[name="${inputName}"]`).eq(
+                                        i
+                                        ); // fallback: cari berdasarkan nama array biasa
+                                }
+
+                                // Tambahkan error feedback
+                                input.addClass('is-invalid');
+                                input.after(
+                                    `<p class="mt-1 text-sm text-red-600 invalid-feedback">${msg}</p>`
+                                );
+                            });
+                        });
+                        Swal.close();
+                    } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
-                            text: 'Error uploading files',
-                            timer: 1500,
-                            showConfirmButton: false
+                            title: 'Upload gagal',
+                            text: 'Terjadi kesalahan.',
                         });
-                        isUploading = false;
-                        $uploadingMessage.addClass('hidden');
                     }
-                }).always(() => {
-                    $imageUpload.disabled = false;
-                    $imageUpload.textContent = 'Upload Foto';
-                    $fileInput.val('');
-                    $imageUpload.val('');
-                });
-            }
+                }
+            });
         }
+
 
         $childDropArea.on("dragover", function(e) {
             e.preventDefault();
@@ -359,15 +669,17 @@
             handleFiles(files);
         });
 
-        @if (!$photoEvents->isEmpty())
+        @if ($photoEvents != 0)
             table = $('#data-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{{ route('photo.event.data') }}",
+                    url: "{{ route('photo-event.data') }}",
                     data: function(d) {
                         d.photo_event_type_id = '{{ $photoEventType->id_photo_event_type }}';
                         d.branch_id = document.getElementById('branchId').value;
+                        d.start_date = $('#date_start').val();
+                        d.end_date = $('#date_end').val();
                     }
                 },
                 columns: [{
