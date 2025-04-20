@@ -28,24 +28,89 @@
             <div class="relative w-full flex flex-col rounded-lg shadow-md flex items-center justify-center group">
                 <div class="absolute inset-0 bg-green-800 opacity-70 rounded-lg"></div>
 
-                <div class="relative flex gap-16 m-8 justify-center w-full">
-                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::JENIS_EVENT)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
+                @php
+                    $jenisEvent = optional(
+                        $photoEvents[
+                            $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::JENIS_EVENT)
+                                ?->id_photo_event_type
+                        ] ?? null,
+                    );
+                @endphp
+                <div class="relative grid grid-cols-3 gap-16 mx-8 mb-2 mt-3 w-full justify-items-center">
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::JENIS_EVENT)]) }}"
+                        class="flex flex-col items-center {{ $jenisEvent == null ? 'justify-center' : '' }} mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Jenis Event</p>
-                        <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
+                        <div
+                            class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center {{ $jenisEvent ? 'justify-center' : '' }}">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
                             <P class="text-xl text-black font-bold">Upload Foto</P>
                         </div>
+                        <div class="grid grid-cols-2 gap-4 w-90 px-4 mt-4">
+                            @if ($jenisEvent->photo_event_location)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $jenisEvent->photo_event_location }}</span>
+                                </div>
+                            @endif
+                            @if ($jenisEvent->photo_event_date)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $jenisEvent->photo_event_date }}</span>
+                                </div>
+                            @endif
+                            @if ($jenisEvent->photo_event_caption)
+                                <div class="col-span-2 flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $jenisEvent->photo_event_caption }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </a>
 
-                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::KWITANSI)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
+                    @php
+                        $kwitansi = optional(
+                            $photoEvents[
+                                $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::KWITANSI)
+                                    ?->id_photo_event_type
+                            ] ?? null,
+                        );
+                    @endphp
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::KWITANSI)]) }}"
+                        class="flex flex-col items-center {{ $kwitansi == null ? 'justify-center' : '' }} mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Kwitansi</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
                             <P class="text-xl text-black font-bold">Upload Foto</P>
                         </div>
+                        <div class="grid grid-cols-2 gap-4 w-90 px-4 mt-4">
+                            @if ($kwitansi->photo_event_location)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $kwitansi->photo_event_location }}</span>
+                                </div>
+                            @endif
+                            @if ($kwitansi->photo_event_date)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $kwitansi->photo_event_date }}</span>
+                                </div>
+                            @endif
+                            @if ($kwitansi->photo_event_caption)
+                                <div class="col-span-2 flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $kwitansi->photo_event_caption }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </a>
 
-                    <a href="{{ route('data.undangan') }}" class="flex flex-col items-center justify-center mx-4">
+                    <a href="{{ route('data.undangan') }}" class="flex flex-col items-center  mx-4">
                         <p class="text-white text-xl font-bold mb-2">Data Undangan</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
 
@@ -53,40 +118,96 @@
                     </a>
                 </div>
 
-                <div class="relative flex gap-16 m-8 justify-center w-full">
-                    <a href="{{ route('data.spk') }}" class="flex flex-col items-center justify-center mx-4 ">
+                <div class="relative grid grid-cols-3 gap-16 mx-8 mb-5 mt-3 w-full justify-items-center">
+                    <a href="{{ route('data.spk') }}" class="flex flex-col items-center mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Data SPK</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
 
                         </div>
                     </a>
 
-                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::DETAIL_BIAYA)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
+                    @php
+                        $detailBiaya = optional(
+                            $photoEvents[
+                                $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::DETAIL_BIAYA)
+                                    ?->id_photo_event_type
+                            ] ?? null,
+                        );
+                    @endphp
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::DETAIL_BIAYA)]) }}"
+                        class="flex flex-col items-center {{ $detailBiaya == null ? 'justify-center' : '' }} mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Detail Biaya</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
                             <P class="text-xl text-black font-bold">Upload Foto</P>
                         </div>
+                        <div class="grid grid-cols-2 gap-4 w-90 px-4 mt-4">
+                            @if ($detailBiaya->photo_event_location)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $detailBiaya->photo_event_location }}</span>
+                                </div>
+                            @endif
+                            @if ($detailBiaya->photo_event_date)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $detailBiaya->photo_event_date }}</span>
+                                </div>
+                            @endif
+                            @if ($detailBiaya->photo_event_caption)
+                                <div class="col-span-2 flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $detailBiaya->photo_event_caption }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </a>
 
-                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::EVALUASI)] ) }}" class="flex flex-col items-center justify-center mx-4 ">
+                    @php
+                        $evaluasi = optional(
+                            $photoEvents[
+                                $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::EVALUASI)
+                                    ?->id_photo_event_type
+                            ] ?? null,
+                        );
+                    @endphp
+                    <a href="{{ route('photo.event.type', ['photoEventType' => $photoEventTypes->firstWhere('photo_event_type_name', $photoEventTypeEnum::EVALUASI)]) }}"
+                        class="flex flex-col items-center {{ $evaluasi == null ? 'justify-center' : '' }} mx-4 ">
                         <p class="text-white text-xl font-bold mb-2">Evaluasi</p>
                         <div class="bg-[#e4e6d9] flex flex-col w-80 h-50 items-center justify-center">
                             <i style="font-size:36px;" class="fa-solid fa-plus"></i>
                             <P class="text-xl text-black font-bold">Upload Foto</P>
                         </div>
+                        <div class="grid grid-cols-2 gap-4 w-90 px-4 mt-4">
+                            @if ($evaluasi->photo_event_location)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $evaluasi->photo_event_location }}</span>
+                                </div>
+                            @endif
+                            @if ($evaluasi->photo_event_date)
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $evaluasi->photo_event_date }}</span>
+                                </div>
+                            @endif
+                            @if ($evaluasi->photo_event_caption)
+                                <div class="col-span-2 flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
+                                    <span class="truncate text-white block min-w-0"
+                                        style="white-space: nowrap;">{{ $evaluasi->photo_event_caption }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </a>
                 </div>
             </div>
-
-
         </div>
-
-
-
-
-
-
 </body>
 
 </html>

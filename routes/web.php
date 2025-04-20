@@ -7,6 +7,7 @@ use App\Http\Controllers\PhotoEventController;
 use App\Models\PhotoEventType;
 use App\Models\Branch;
 use App\Models\PhotoEvent;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,19 @@ Route::get('/', function () {
     // get all photo event types
     $data['photoEventTypes'] = PhotoEventType::all();
     $data['photoEventTypeEnum'] = new PhotoEventTypeEnum();
+
+    $photoEventTypes = PhotoEventType::all();
+    $photoEvents = [];
+    foreach ($photoEventTypes as $photoEventType) {
+        $lastPhotoEvent = PhotoEvent::where('photo_event_type_id', $photoEventType->id_photo_event_type)
+            ->orderBy('photo_event_date', 'desc')
+            ->first();
+        if ($lastPhotoEvent) {
+            $lastPhotoEvent->photo_event_date = Carbon::parse($lastPhotoEvent->photo_event_date)->format('d-m-Y');
+            $photoEvents[$photoEventType->id_photo_event_type] = $lastPhotoEvent;
+        }
+    }
+    $data['photoEvents'] = $photoEvents;
     return view('dashboard', $data);
 })->name('dashboard');
 
