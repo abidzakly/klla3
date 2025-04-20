@@ -49,21 +49,21 @@
                             @if ($jenisEvent->photo_event_location)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $jenisEvent->photo_event_location }}</span>
                                 </div>
                             @endif
                             @if ($jenisEvent->photo_event_date)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white text-center block ml-2"
                                         style="white-space: nowrap;">{{ $jenisEvent->photo_event_date }}</span>
                                 </div>
                             @endif
                             @if ($jenisEvent->photo_event_caption)
                                 <div class="col-span-2 flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $jenisEvent->photo_event_caption }}</span>
                                 </div>
                             @endif
@@ -89,21 +89,21 @@
                             @if ($kwitansi->photo_event_location)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $kwitansi->photo_event_location }}</span>
                                 </div>
                             @endif
                             @if ($kwitansi->photo_event_date)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $kwitansi->photo_event_date }}</span>
                                 </div>
                             @endif
                             @if ($kwitansi->photo_event_caption)
                                 <div class="col-span-2 flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $kwitansi->photo_event_caption }}</span>
                                 </div>
                             @endif
@@ -145,21 +145,21 @@
                             @if ($detailBiaya->photo_event_location)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $detailBiaya->photo_event_location }}</span>
                                 </div>
                             @endif
                             @if ($detailBiaya->photo_event_date)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $detailBiaya->photo_event_date }}</span>
                                 </div>
                             @endif
                             @if ($detailBiaya->photo_event_caption)
                                 <div class="col-span-2 flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $detailBiaya->photo_event_caption }}</span>
                                 </div>
                             @endif
@@ -185,21 +185,21 @@
                             @if ($evaluasi->photo_event_location)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-location-dot text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $evaluasi->photo_event_location }}</span>
                                 </div>
                             @endif
                             @if ($evaluasi->photo_event_date)
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-calendar-days text-2xl text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $evaluasi->photo_event_date }}</span>
                                 </div>
                             @endif
                             @if ($evaluasi->photo_event_caption)
                                 <div class="col-span-2 flex items-center gap-2 min-w-0">
                                     <i class="fa-solid fa-comment text-2xl mt-2 text-white flex-shrink-0"></i>
-                                    <span class="truncate text-white block min-w-0"
+                                    <span class="truncate text-white block min-w-0 ml-2"
                                         style="white-space: nowrap;">{{ $evaluasi->photo_event_caption }}</span>
                                 </div>
                             @endif
