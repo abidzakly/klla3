@@ -168,32 +168,85 @@ class PhotoEventController extends Controller
                 DB::commit();
                 return Response::success(null, 'Upload berhasil');
         } catch (\Exception $e) {
-            dd($e);
             DB::rollBack();
             return Response::errorCatch($e, 'Upload gagal');
         }
     }
 
+    public function show(PhotoEvent $photoEvent)
+    {
+        // Untuk AJAX info modal
+        $data = $photoEvent->toArray();
+        $data['file_url'] = $photoEvent->file_path ? asset('storage/' . $photoEvent->file_path) : '';
+        $data['photo_event_file_name'] = pathinfo($photoEvent->file_path, PATHINFO_FILENAME);
+        $data['photo_event_date'] = Carbon::parse($photoEvent->photo_event_date)->format('Y-m-d');
+        $data['photo_event_date_text'] = Carbon::parse($photoEvent->photo_event_date)->translatedFormat('l, d F Y');
+        return response()->json(['data' => $data]);
+    }
+
     public function update(Request $request, PhotoEvent $photoEvent)
     {
-        $request->validate([
-            'file_name' => 'required|string'
-        ]);
+        $rules = [
+            'photo_event_file_name'   => 'required|string|max:255',
+            'photo_event_name'        => 'required|string|max:255',
+            'photo_event_location'    => 'required|string|max:255',
+            'photo_event_caption'     => 'required|string|max:500',
+            'photo_event_date'        => 'required|date',
+            'file'                    => 'nullable|file|mimes:jpg,jpeg,png,svg|max:10240',
+        ];
+        $messages = [
+            'photo_event_file_name.required' => 'Nama file wajib diisi.',
+            'photo_event_name.required' => 'Nama event wajib diisi.',
+            'photo_event_location.required' => 'Lokasi event wajib diisi.',
+            'photo_event_caption.required' => 'Caption wajib diisi.',
+            'photo_event_date.required' => 'Tanggal event wajib diisi.',
+            'file.mimes' => 'File harus berupa jpg, jpeg, png, svg.',
+            'file.max' => 'Ukuran maksimal file adalah 10MB.',
+        ];
+        $validated = $request->validate($rules, $messages);
 
         DB::beginTransaction();
-
         try {
-            $oldPath = $photoEvent->file_path;
-            $newPath = "photo-event/{$photoEvent->photoEventType->photo_event_type_name}/{$request->file_name}";
+            $updateData = [
+                'photo_event_name' => $request->photo_event_name,
+                'photo_event_location' => $request->photo_event_location,
+                'photo_event_caption' => $request->photo_event_caption,
+                'photo_event_date' => $request->photo_event_date,
+            ];
 
-            if (Storage::exists($oldPath)) {
-                Storage::move($oldPath, $newPath);
+            // Rename file jika nama file berubah
+            $oldPath = $photoEvent->file_path;
+            $ext = pathinfo($oldPath, PATHINFO_EXTENSION);
+            $dir = dirname($oldPath);
+            $newFileName = $request->photo_event_file_name . '.' . $ext;
+            $newPath = $dir . '/' . $newFileName;
+
+            if ($request->photo_event_file_name !== pathinfo($oldPath, PATHINFO_FILENAME)) {
+                $counter = 1;
+                while (Storage::exists($newPath)) {
+                    $newFileName = $request->photo_event_file_name . "($counter)." . $ext;
+                    $newPath = $dir . '/' . $newFileName;
+                    $counter++;
+                }
+                if (Storage::exists($oldPath)) {
+                    Storage::move($oldPath, $newPath);
+                }
+                $updateData['file_path'] = $newPath;
             }
 
-            $photoEvent->update([
-                'file_path' => $newPath,
-            ]);
+            // Jika upload file baru (replace)
+            if ($request->hasFile('file')) {
+                if (Storage::exists($photoEvent->file_path)) {
+                    Storage::delete($photoEvent->file_path);
+                }
+                $file = $request->file('file');
+                $file->storeAs($dir, $newFileName);
+                $updateData['file_path'] = $dir . '/' . $newFileName;
+            }
 
+            $photoEvent->update($updateData);
+
+            DB::commit();
             return Response::success(null, 'Update berhasil');
         } catch (\Exception $e) {
             DB::rollBack();

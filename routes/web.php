@@ -71,3 +71,4 @@ Route::post('/photo-event/{photoEventType}', [PhotoEventController::class, 'stor
 Route::get('/photo-event/data', [PhotoEventController::class, 'getData'])->name('photo-event.data');
 Route::delete('/photo-event/{photoEvent}', [PhotoEventController::class, 'destroy'])->name('photo-event.destroy');
 Route::post('/photo-event/{photoEvent}/rename', [PhotoEventController::class, 'rename'])->name('photo-event.rename');
+Route::get('/photo-event/{photoEvent}', [PhotoEventController::class, 'show'])->name('photo-event.show');

@@ -7,11 +7,14 @@
                 <a href="#" class="block px-4 py-2 text-black hover:bg-gray-100 transition-all duration-300 rename-button" data-id="{{ $row->id_photo_event }}">Rename</a>
                 <a href="#" class="block px-4 py-2 text-black hover:bg-gray-100 transition-all duration-300 delete-button" data-id="{{ $row->id_photo_event }}">Delete</a>
                 <a href="{{ $row->getImage() }}" class="block px-4 py-2 text-black hover:bg-gray-100 transition-all duration-300" download>Download</a>
+                <a href="#" class="block px-4 py-2 text-black hover:bg-gray-100 transition-all duration-300 info-button" data-id="{{ $row->id_photo_event }}">Info</a>
             </div>
         </div>
     </div>
     <hr class="border-black w-full">
     <div class="w-full h-full overflow-hidden flex items-center justify-center">
-        <img class="w-full h-full object-cover" src="{{ $row->getImage() }}" alt="">
+        <img class="w-full h-full object-cover"
+             src="{{ $row->getImage() }}?t={{ \Illuminate\Support\Str::random(8) }}"
+             alt="">
     </div>
 </div>

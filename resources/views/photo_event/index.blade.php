@@ -129,7 +129,7 @@
     </nav>
 
     <div class="w-[80%] mt-6">
-        <div class="relative w-full flex items-center justify-start px-6 font-bold text-white mt-4 mb-3 z-2">
+        <div class="relative w-full flex items-center justify-start px-6 font-bold text-white mt-4 mb-3 z-1">
             <button id="branchDropdownButton" class="text-xl font-bold text-white bg-green-600 px-6 py-2 rounded-lg">
                 {{ $branch->branch_name }} ▼
             </button>
@@ -174,7 +174,7 @@
                     <i class="fa-solid fa-arrow-left text-2xl ml-2"></i>
                 </a>
 
-                <div class="absolute left-1/2 -translate-x-1/2 z-3">
+                <div class="absolute left-1/2 -translate-x-1/2 z-1">
                     <button id="dropdownButton" class="text-xl font-bold text-white">
                         Foto Foto {{ $photoEventType->photo_event_type_name }} ▼
                     </button>
@@ -227,19 +227,19 @@
 
     <!-- Modal untuk input detail file -->
     <div id="fileModal" tabindex="-1"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 bg-black/40 backdrop-blur-sm">
+        class="hidden fixed inset-0 z-1 flex items-center justify-center bg-opacity-50 bg-black/40 backdrop-blur-sm">
         <div class="bg-white rounded-lg p-4 w-96">
             <h2 class="text-lg font-bold mb-4">Detail File</h2>
             <form id="fileForm" enctype="multipart/form-data">
                 <div id="fileDetailsContainer" class="space-y-4 max-h-[40vh] overflow-y-auto"></div>
                 <div class="flex justify-end space-x-2 mt-4">
                     <button type="button" onclick="closeFileModal()"
-                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
-                    Tutup
-                </button>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                    Submit dan Upload
-                </button>
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Tutup
+                    </button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Submit dan Upload
+                    </button>
                 </div>
             </form>
         </div>
@@ -247,7 +247,7 @@
 
     <!-- Modal untuk pratinjau gambar -->
     <div id="previewModal" tabindex="-1"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        class="hidden fixed inset-0 z-2 flex items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="bg-white rounded-lg p-4 w-96">
             <img id="previewImage" src="" alt="Preview" class="w-full h-auto rounded">
             <div class="flex justify-end">
@@ -255,6 +255,95 @@
                     Tutup
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Info/Edit File -->
+    <div id="infoModal" tabindex="-1"
+        class="hidden fixed inset-0 z-1 flex items-center justify-center bg-opacity-50 bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-lg p-4 w-96 relative">
+            <h2 class="text-lg font-bold mb-4">Detail File</h2>
+            <form id="infoForm" enctype="multipart/form-data">
+                <div id="infoDetailsContainer" class="space-y-4 max-h-[40vh] overflow-y-auto">
+                    <!-- Parent: View/Edit Component -->
+                    <div id="info-view-block" class="">
+                        <div>
+                            <h3
+                                class="text-blue-600 underline cursor-pointer preview-link font-semibold text-lg mb-2 truncate hover:underline">
+                                <span>File :</span>
+                                <span id="info-view-file" class="truncate"></span>
+                            </h3>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Nama Event</label>
+                            <p id="info-view-event"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Lokasi Event</label>
+                            <p id="info-view-location"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Caption</label>
+                            <p id="info-view-caption"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tanggal Event</label>
+                            <p id="info-view-date"></p>
+                        </div>
+                    </div>
+                    <div id="info-edit-block" class="hidden flex flex-col gap-4">
+                        <div>
+                            <h3
+                                class="text-blue-600 underline cursor-pointer preview-link font-semibold text-lg mb-2 truncate hover:underline">
+                                <span>File : </span>
+                                <span id="info-edit-file" class="truncate"></span>
+                            </h3>
+                            <div class="">
+                                <span>Ganti file (optional): </span>
+                                <input type="file" name="file" accept=".jpg,.jpeg,.png,.svg" class="block mt-3 mb-3" />
+                                <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Nama File Photo</label>
+                            <input type="text" name="photo_event_file_name"
+                                class="block w-full border-gray-300 rounded-md shadow-sm" required />
+                            <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                            <label class="block text-sm font-medium text-gray-700 mt-2">Nama Event</label>
+                            <input type="text" name="photo_event_name"
+                                class="block w-full border-gray-300 rounded-md shadow-sm" required />
+                            <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Lokasi Event</label>
+                            <input type="text" name="photo_event_location"
+                                class="block w-full border-gray-300 rounded-md shadow-sm" required />
+                            <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Caption</label>
+                            <textarea name="photo_event_caption" class="block w-full border-gray-300 rounded-md shadow-sm" required></textarea>
+                            <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tanggal Event</label>
+                            <input type="date" name="photo_event_date"
+                                class="block w-full border-gray-300 rounded-md shadow-sm" required />
+                            <p class="invalid-feedback text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-4" id="infoModalFooter">
+                    <button type="button" id="infoCloseBtn"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Tutup
+                    </button>
+                    <button type="button" id="infoEditBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                        Edit
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -287,6 +376,13 @@
         $("#fileDetailsContainer").empty(); // Bersihkan kontainer detail
     }
 
+    function openPreviewModal(imageUrl) {
+        const previewImage = document.getElementById('previewImage');
+        const previewModal = document.getElementById('previewModal');
+        previewImage.src = imageUrl;
+        previewModal.classList.remove('hidden');
+    }
+
     function closePreviewModal() {
         const previewModal = document.getElementById('previewModal');
         previewModal.classList.add('hidden');
@@ -297,7 +393,6 @@
         const dateStart = document.getElementById("date_start").value;
         const dateEnd = document.getElementById("date_end").value;
 
-        console.log(new Date(dateStart) < new Date(dateEnd))
         if (new Date(dateStart) > new Date(dateEnd)) {
             Toast.fire({
                 icon: "error",
@@ -365,13 +460,6 @@
             renderFileDetailModal(); // Langsung buka modal isi detail
         }
 
-        function openPreviewModal(imageUrl) {
-            const previewImage = document.getElementById('previewImage');
-            const previewModal = document.getElementById('previewModal');
-            previewImage.src = imageUrl;
-            previewModal.classList.remove('hidden');
-        }
-
         function renderFileDetailModal() {
             const container = $("#fileDetailsContainer");
             container.empty();
@@ -388,7 +476,7 @@
     data-url="${file.previewUrl}">
     File ${index + 1}: ${file.photo_event_file_name}
 </h3>
-    
+
             <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700">Nama File Photo</label>
                 <input type="text" name="event_file_name_${index}"
@@ -705,6 +793,7 @@
                     [2, 10, 20, 60],
                     [2, 10, 20, 60]
                 ],
+                destroy: true,
                 order: [
                     [0, 'desc']
                 ],
@@ -866,13 +955,41 @@
                             }
                         });
                     });
+
+                    // Info button
+                    $('.info-button').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        const id = $(this).data('id');
+                        // Fetch detail via AJAX
+                        $.ajax({
+                            url: `/photo-event/${id}`,
+                            type: 'GET',
+                            beforeSend: function() {
+                                // disable button and loading
+                                $('.info-button').prop('disabled', true);
+                                $('.info-button').html(
+                                    '<i class="fa fa-spinner fa-spin"></i>');
+                            },
+                            success: function(res) {
+                                openInfoModal(res.data);
+                            },
+                            error: function(xhr) {
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "Gagal memuat data"
+                                });
+                            },
+                            complete: function() {
+                                $('.info-button').prop('disabled', false);
+                                $('.info-button').html('Info');
+                            }
+                        });
+                    });
                 }
             });
         @endif
     });
-</script>
 
-<script>
     const dropdownButton = document.getElementById("dropdownButton");
     const dropdownMenu = document.getElementById("dropdownMenu");
 
@@ -913,31 +1030,207 @@
         });
     });
 
-    document.querySelectorAll('input[type="text"]').forEach(input => {
-        input.addEventListener('blur', () => {
-            if (!input.hasAttribute('readonly')) {
-                const id = input.dataset.id;
-                const fileName = input.value;
-                fetch(`/photo-event/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                            .getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        file_name: fileName
-                    })
-                }).then(response => {
-                    if (response.ok) {
-                        input.setAttribute('readonly', true);
-                        location.reload();
-                    } else {
-                        alert('Error renaming file');
-                    }
+    // Hapus kode berikut jika ada di JS-mu (ini penyebab bug trigger rename!):
+
+    // Info/Edit Modal Logic
+    let infoMode = 'view'; // 'view' | 'edit'
+    let currentPhotoEventId = null;
+    let currentPhotoEventData = null;
+
+    function attachView(data) {
+        $('#info-edit-block [name="file"]').val('');
+        // Set data-url on the h3 and update the filename
+        $('#info-view-file')
+            .text(data.photo_event_file_name || data.file_name);
+        $('#info-view-file')
+            .parent('h3')
+            .attr('data-url', data.file_url || data.file_path);
+
+        // Remove previous click handler to avoid stacking
+        $('#info-view-file').parent('h3').off('click');
+        // Attach click handler directly to h3 (not delegated)
+        $('#info-view-file').parent('h3').on('click', function() {
+            const url = $(this).attr('data-url');
+            if (url) openPreviewModal(url);
+        });
+
+        $('#info-view-event').text(data.photo_event_name || '-');
+        $('#info-view-location').text(data.photo_event_location || '-');
+        $('#info-view-caption').text(data.photo_event_caption || '-');
+        $('#info-view-date').text(data.photo_event_date_text || '-');
+        $('#info-view-block').show();
+        $('#info-edit-block').hide();
+        $("#infoModalFooter").html(`
+            <button type="button" id="infoCloseBtn"
+                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                Tutup
+            </button>
+            <button type="button" id="infoEditBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                Edit
+            </button>
+        `);
+    }
+
+    function attachEdit(data) {
+        $('#info-edit-file')
+            .text(data.photo_event_file_name || data.file_name);
+        $('#info-edit-file')
+            .parent('h3')
+            .attr('data-url', data.file_url || data.file_path);
+
+        $('#info-edit-file').parent('h3').off('click');
+        $('#info-edit-file').parent('h3').on('click', function() {
+            const url = $(this).attr('data-url');
+            if (url) openPreviewModal(url);
+        });
+
+        $('[name="photo_event_file_name"]').val(data.photo_event_file_name || data.file_name || '');
+        $('[name="photo_event_name"]').val(data.photo_event_name || '');
+        $('[name="photo_event_location"]').val(data.photo_event_location || '');
+        $('[name="photo_event_caption"]').val(data.photo_event_caption || '');
+        $('[name="photo_event_date"]').val(data.photo_event_date || '');
+        $('#info-view-block').hide();
+        $('#info-edit-block').show();
+        $("#infoModalFooter").html(`
+            <button type="button" id="infoCloseBtn"
+                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                Tutup
+            </button>
+            <button type="button" id="infoCancelBtn"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+                Cancel
+            </button>
+            <button type="submit" id="infoUpdateBtn"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                Update
+            </button>
+        `);
+    }
+
+    function openInfoModal(data) {
+        infoMode = 'view';
+        currentPhotoEventId = data.id_photo_event;
+        currentPhotoEventData = data;
+        attachView(data);
+        $("#infoModal").removeClass("hidden").addClass("flex");
+    }
+
+    // Open Info Modal
+    $('body').on('click', '.info-button', function() {
+        const id = $(this).data('id');
+
+        // using ajax error and succcess and complete and before send
+        $.ajax({
+            url: `/photo-event/${id}`,
+            type: 'GET',
+            beforeSend: function() {
+                // disable button and loading
+                $('.info-button').prop('disabled', true);
+                $('.info-button').html('<i class="fa fa-spinner fa-spin"></i>');
+            },
+            success: function(res) {
+                openInfoModal(res.data);
+            },
+            error: function(xhr) {
+                Toast.fire({
+                    icon: "error",
+                    title: "Gagal memuat data"
                 });
+            },
+            complete: function() {
+                $('.info-button').prop('disabled', false);
+                $('.info-button').html('Info');
             }
         });
+    });
+
+    // Preview file in modal (both view/edit)
+    $('body').on('click', '#info-view-file, #info-edit-file', function() {
+        const url = $(this).data('url');
+        if (url) openPreviewModal(url);
+    });
+
+    // Edit mode
+    $('body').on('click', '#infoEditBtn', function() {
+        infoMode = 'edit';
+        attachEdit(currentPhotoEventData);
+    });
+
+    // Cancel edit
+    $('body').on('click', '#infoCancelBtn', function() {
+        infoMode = 'view';
+        attachView(currentPhotoEventData);
+    });
+
+    // Tutup modal
+    $('body').on('click', '#infoCloseBtn', function() {
+        $("#infoModal").addClass("hidden").removeClass("flex");
+        infoMode = 'view';
+        currentPhotoEventId = null;
+        currentPhotoEventData = null;
+    });
+
+    // Update
+    $('body').on('submit', '#infoForm', function(e) {
+        if (infoMode !== 'edit') return false;
+        // disabled button
+        $('#infoUpdateBtn').prop('disabled', true);
+        $('#infoUpdateBtn').html('<i class="fa fa-spinner fa-spin"></i> Updating data...');
+        e.preventDefault();
+        $('.invalid-feedback').addClass('hidden').text('');
+        let formData = new FormData(this);
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_method', 'PUT');
+        $.ajax({
+            url: `/photo-event/${currentPhotoEventId}`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                Toast.fire({
+                    icon: "success",
+                    title: res
+                        .message,
+                    timer: 1500,
+                });
+                if (table) {
+                    table.ajax.reload(null, false);
+                    closeFileModal();
+                } else {
+                    location.reload();
+                }
+                $("#infoModal").addClass("hidden").removeClass("flex");
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON.errors;
+                    Object.keys(errors).forEach(function(key) {
+                        let input = $(`[name="${key}"]`);
+                        input.addClass('is-invalid');
+                        input.next('.invalid-feedback').removeClass('hidden').text(errors[
+                            key][0]);
+                    });
+                } else {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Update gagal"
+                    });
+                }
+            },
+            complete: function() {
+                $('#infoUpdateBtn').prop('disabled', false);
+                $('#infoUpdateBtn').html('Update');
+            }
+        });
+    });
+
+    // Cegah tutup modal dengan klik backdrop
+    $('#infoModal').on('click', function(e) {
+        if (e.target === this) {
+            // do nothing
+        }
     });
 </script>
 
