@@ -424,7 +424,7 @@
                     },
                 ],
                 order: [
-                    [2, 'desc']
+                    [5, 'desc']
                 ],
                 drawCallback: function(settings) {
                     // Pastikan semua tombol "edit" memiliki event handler yang benar setelah render ulang
