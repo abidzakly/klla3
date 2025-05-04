@@ -223,7 +223,7 @@
                         <th class="px-2 py-2 border border-2 border-black">Act DO</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
                         <th class="px-2 py-2 border border-2 border-black">MPP</th>
-                        <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>                        
+                        <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
                         <th class="px-2 py-2 border border-2 border-black">Productivity</th>
                         <th class="px-2 py-2 border border-2 border-black">Target SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">ACT SPK</th>
@@ -274,11 +274,11 @@
             var gap_spk = act_spk - target_spk;
             var ach_spk = target_spk > 0 ? (act_spk / target_spk) * 100 : 0;
             row.find('[name="gap_spk"]').val(Math.round(gap_spk));
-            row.find('[name="ach_spk"]').val(Math.round(ach_spk) + '%');                    
-                                    
-            var productivity = mpp > 0 ? (mpp / act_do) * 100 : 0;            
-            row.find('[name="productivity"]').val(Math.round(productivity) + '%');                        
-            
+            row.find('[name="ach_spk"]').val(Math.round(ach_spk) + '%');
+
+            var productivity = mpp > 0 ? (mpp / act_do) * 100 : 0;
+            row.find('[name="productivity"]').val(Math.round(productivity) + '%');
+
             var status = ach_do >= 100 ? 'ON THE TRACK' : 'PUSH SPK';
             var colorClass = ach_do >= 100 ? 'bg-green-500' : 'bg-red-500';
 
@@ -366,17 +366,17 @@
                         data: 'act_do',
                         name: 'act_do',
                         searchable: true
-                    }, 
+                    },
                     {
                         data: 'gap_do',
                         name: 'gap_do',
                         searchable: true
-                    },                   
+                    },
                     {
                         data: 'mpp',
                         name: 'mpp',
                         searchable: true
-                    },                                       
+                    },
                     {
                         data: 'ach_do',
                         name: 'ach_do',
@@ -386,12 +386,12 @@
                         data: 'productivity',
                         name: 'productivity',
                         searchable: true
-                    },                    
+                    },
                     {
                         data: 'target_spk',
                         name: 'target_spk',
                         searchable: true
-                    },                 
+                    },
                     {
                         data: 'act_spk',
                         name: 'act_spk',
@@ -424,7 +424,7 @@
                     },
                 ],
                 order: [
-                    [11, 'desc']
+                    [2, 'desc']
                 ],
                 drawCallback: function(settings) {
                     // Pastikan semua tombol "edit" memiliki event handler yang benar setelah render ulang
@@ -440,7 +440,7 @@
                             var name = $(this).data('name');
                             var tdWidth = $(this)
                                 .width(); // Ambil width td sebelum diubah menjadi input
-                                
+
                             if(name == 'nama_supervisor') return;
 
                             if (name === 'gap_do' || name === 'ach_do' || name ===
