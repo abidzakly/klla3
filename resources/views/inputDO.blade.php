@@ -47,43 +47,62 @@
                         <th class="px-2 py-2 border-2 border-black w-96">Nama Supervisor</th>
                         <th class="w-48 px-2 py-2 border-2 border-black">Target DO</th>
                         <th class="w-48 px-2 py-2 border-2 border-black">Act DO</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black">MPP</th>
                         <th class="w-48 px-2 py-2 border-2 border-black">GAP</th>
                         <th class="w-48 px-2 py-2 border-2 border-black ">Ach (%)</th>
+                        <th class="w-48 px-2 py-2 border-2 border-black">Productivity</th>                        
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="supervisor-table-body">
+                    @foreach ($dataSupervisors as $supervisor)
                     <tr class="data-row">
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
-                                <input type="text" name="nama_supervisor"
-                                    class="w-full px-1 text-center bg-transparent paste-input">
+                                <input type="text"
+                                    class="w-full px-1 text-center bg-transparent paste-input" value="{{ $supervisor->supervisor_name }}"
+                                    readonly>
+                                <input type="hidden" name="id_supervisor" value="{{ $supervisor->id_supervisor }}">
+                                <input type="hidden" name="id_monitoring_do_spk" value="{{ $supervisor->id_monitoring_do_spk }}">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
                                 <input type="number" name="target_do" oninput="(calculateGapAndAch(this))"
-                                    class="w-full px-1 text-center bg-transparent paste-input">
+                                    class="w-full px-1 text-center bg-transparent paste-input" value="{{ $supervisor->target_do }}">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
                                 <input type="number" name="act_do" oninput="(calculateGapAndAch(this))"
-                                    class="w-full px-1 text-center bg-transparent paste-input">
+                                    class="w-full px-1 text-center bg-transparent paste-input" value="{{ $supervisor->act_do }}">
+                            </div>
+                        </td>
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="number" name="mpp" oninput="(calculateGapAndAch(this))"
+                                    class="w-full px-1 text-center bg-transparent paste-input" value="{{ $supervisor->mpp }}">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
                                 <input type="text" name="gap_do"
-                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly value="{{ $supervisor->gap_do ?? '' }}">
                             </div>
                         </td>
                         <td class="w-20 ml-4 text-xl text-white border-2 border-black">
                             <div class="m-2 text-white bg-transparent rounded-md">
                                 <input type="text" name="ach_do"
-                                    class="w-full px-1 text-center bg-transparent paste-input" readonly>
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly value="{{ $supervisor->ach_do ?? '' }}">
+                            </div>
+                        </td>
+                        <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                            <div class="m-2 text-white bg-transparent rounded-md">
+                                <input type="text" name="productivity"
+                                    class="w-full px-1 text-center bg-transparent paste-input" readonly value="{{ $supervisor->productivity ?? '' }}">
                             </div>
                         </td>
                     </tr>
+                    @endforeach
                 </tbody>
             </table>
             <button id="submit-button"
@@ -106,6 +125,15 @@
         const actDo = parseFloat(tr.querySelector('input[name="act_do"]')?.value) || null;
         const gapDo = actDo - targetDo;
         const achDo = (targetDo > 0) ? (actDo / targetDo) * 100 : 0;
+        // Mpp / Actual DO
+        const mpp = parseFloat(tr.querySelector('input[name="mpp"]')?.value) || null;
+        const productivity = (mpp > 0 && actDo > 0) ? (mpp / actDo) * 100 : 0;
+        tr.querySelector('input[name="productivity"]').value = Math.round(productivity) + "%";
+        
+        if(productivity == null) {
+            tr.querySelector('input[name="productivity"]').value = "";
+        }
+        
         tr.querySelector('input[name="gap_do"]').value = Math.round(gapDo);
         tr.querySelector('input[name="ach_do"]').value = Math.round(achDo) + "%";
         if(actDo == null && targetDo == null) {
@@ -114,100 +142,156 @@
         }
     };
 
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".paste-input").forEach(input => {
-            input.addEventListener("paste", function(event) {
-                event.preventDefault(); // Prevent default paste behavior
-
-                let clipboardData = event.clipboardData || window.clipboardData;
-                let pastedData = clipboardData.getData("text"); // Get pasted content
-
-                let rows = pastedData.trim().split("\n").map(row => row.split(
-                    "\t")); // Split into rows & columns
-                let tableBody = this.closest("table").querySelector(
-                    "tbody"); // Find the correct table body
-                let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
-                    .closest("td")); // Get starting column index
-                let existingRows = tableBody.querySelectorAll(
-                    ".data-row:not(:first-child)"); // Get existing rows
-
-                const nameColumn = ['nama_supervisor', 'target_do',
-                                'act_do', 'gap_do',
-                                'ach_do'
-                            ];
-                rows.forEach((data, rowIndex) => {
-                    let targetRow = document.createElement(
-                        "tr"); // Use existing row or create new
-                    targetRow.classList.add("data-row");
-                    // Ensure targetRow has enough cells
-                    while (targetRow.children.length < this.closest("tr").children
-                        .length) {
-                        let newCell = document.createElement("td");
-                        newCell.className = this.closest("td").className;
-                        let div = document.createElement("div");
-                        div.className = "m-2 bg-transparent text-white rounded-md";
-                        let input = document.createElement("input");
-                        input.className = "w-full bg-transparent px-1 text-center";
-                        input.type = "text";
-                        input.name = nameColumn[targetRow.children.length];
-                        if (targetRow.children.length === 1 || targetRow.children.length === 2) {
-                            input.setAttribute('oninput', 'calculateGapAndAch(this)');
-                            input.type = "number";
-                        }
-                        if (targetRow.children.length === 1 || targetRow.children.length === 2) {
-                            input.setAttribute('oninput', 'calculateGapAndAch(this)');
-                        }
-                        if (targetRow.children.length === 3 || targetRow.children.length === 4) {
-                            input.readOnly = true;
-                        }
-                        div.appendChild(input);
-                        newCell.appendChild(div);
-                        targetRow.appendChild(newCell);
-                        // let p = document.createElement("p");
-                        // p.className = "editable w-full bg-transparent px-1 text-center";
-                        // p.textContent = ""; // Empty cell initially
-                        // div.appendChild(p);
-                        // newCell.appendChild(div);
-                        // targetRow.appendChild(newCell);
-                    }
-
-                    if (data.every(cellData => cellData.trim() === "")) {
-                        return;
-                    }
-
-                    // Paste multiple columns
-                    data.forEach((cellData, colIndex) => {
-                        let targetColumnIndex = startColumnIndex + colIndex;
-                        if (targetColumnIndex < targetRow.children.length) {
-                            let targetCell = targetRow.children[
-                                targetColumnIndex];
-                            if (targetColumnIndex === 1 || targetColumnIndex ===
-                                2 || targetColumnIndex == 0) {
-                                const $inputElement = $(targetCell).find(
-                                    "input");
-                                $inputElement.val(cellData.trim())
-                            }
-                        }
-                        // let targetColumnIndex = startColumnIndex + colIndex;
-                        // if (targetColumnIndex < targetRow.children.length) {
-                        //     let targetCell = targetRow.children[targetColumnIndex];
-                        //     targetCell.querySelector("p").textContent = cellData.trim();
-                        // }
-                    });
-
-                    // Add the row if it's new
-                    // if (!existingRows[rowIndex]) {
-                    // tableBody.appendChild(targetRow);
-                    // }
-
-                    tableBody.appendChild(targetRow);
-                    // trigger $inputElement.trigger('input');
-                    targetRow.querySelectorAll('input').forEach(input => {
-                        calculateGapAndAch(input);
-                    });
-                });
-            });
+    function renderSupervisorRows(supervisors) {
+        let html = '';
+        supervisors.forEach(function(s) {
+            html += `
+            <tr class="data-row">
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="text"
+                            class="w-full px-1 text-center bg-transparent paste-input" value="${s.supervisor_name}"
+                            readonly>
+                        <input type="hidden" name="id_supervisor" value="${s.id_supervisor}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="number" name="target_do" oninput="(calculateGapAndAch(this))"
+                            class="w-full px-1 text-center bg-transparent paste-input" value="${s.target_do ?? ''}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="number" name="act_do" oninput="(calculateGapAndAch(this))"
+                            class="w-full px-1 text-center bg-transparent paste-input" value="${s.act_do ?? ''}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="number" name="mpp" oninput="(calculateGapAndAch(this))"
+                            class="w-full px-1 text-center bg-transparent paste-input" value="${s.mpp ?? ''}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="text" name="gap_do"
+                            class="w-full px-1 text-center bg-transparent paste-input" readonly value="${s.gap_do ?? ''}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="text" name="ach_do"
+                            class="w-full px-1 text-center bg-transparent paste-input" readonly value="${s.ach_do ?? ''}">
+                    </div>
+                </td>
+                <td class="w-20 ml-4 text-xl text-white border-2 border-black">
+                    <div class="m-2 text-white bg-transparent rounded-md">
+                        <input type="text" name="productivity"
+                            class="w-full px-1 text-center bg-transparent paste-input" readonly value="${s.productivity ?? ''}">
+                    </div>
+                </td>
+            </tr>
+            `;
         });
+        // console.log($('#supervisor-table-body'));
+        $('#supervisor-table-body').html(html);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // document.querySelectorAll(".paste-input").forEach(input => {
+        //     input.addEventListener("paste", function(event) {
+        //         event.preventDefault(); // Prevent default paste behavior
+
+        //         let clipboardData = event.clipboardData || window.clipboardData;
+        //         let pastedData = clipboardData.getData("text"); // Get pasted content
+
+        //         let rows = pastedData.trim().split("\n").map(row => row.split(
+        //             "\t")); // Split into rows & columns
+        //         let tableBody = this.closest("table").querySelector(
+        //             "tbody"); // Find the correct table body
+        //         let startColumnIndex = Array.from(this.closest("tr").children).indexOf(this
+        //             .closest("td")); // Get starting column index
+        //         let existingRows = tableBody.querySelectorAll(
+        //             ".data-row:not(:first-child)"); // Get existing rows
+
+        //         const nameColumn = ['nama_supervisor', 'target_do',
+        //                         'act_do', 'gap_do',
+        //                         'ach_do'
+        //                     ];
+        //         rows.forEach((data, rowIndex) => {
+        //             let targetRow = document.createElement(
+        //                 "tr"); // Use existing row or create new
+        //             targetRow.classList.add("data-row");
+        //             // Ensure targetRow has enough cells
+        //             while (targetRow.children.length < this.closest("tr").children
+        //                 .length) {
+        //                 let newCell = document.createElement("td");
+        //                 newCell.className = this.closest("td").className;
+        //                 let div = document.createElement("div");
+        //                 div.className = "m-2 bg-transparent text-white rounded-md";
+        //                 let input = document.createElement("input");
+        //                 input.className = "w-full bg-transparent px-1 text-center";
+        //                 input.type = "text";
+        //                 input.name = nameColumn[targetRow.children.length];
+        //                 if (targetRow.children.length === 1 || targetRow.children.length === 2) {
+        //                     input.setAttribute('oninput', 'calculateGapAndAch(this)');
+        //                     input.type = "number";
+        //                 }
+        //                 if (targetRow.children.length === 1 || targetRow.children.length === 2) {
+        //                     input.setAttribute('oninput', 'calculateGapAndAch(this)');
+        //                 }
+        //                 if (targetRow.children.length === 3 || targetRow.children.length === 4) {
+        //                     input.readOnly = true;
+        //                 }
+        //                 div.appendChild(input);
+        //                 newCell.appendChild(div);
+        //                 targetRow.appendChild(newCell);
+        //                 // let p = document.createElement("p");
+        //                 // p.className = "editable w-full bg-transparent px-1 text-center";
+        //                 // p.textContent = ""; // Empty cell initially
+        //                 // div.appendChild(p);
+        //                 // newCell.appendChild(div);
+        //                 // targetRow.appendChild(newCell);
+        //             }
+
+        //             if (data.every(cellData => cellData.trim() === "")) {
+        //                 return;
+        //             }
+
+        //             // Paste multiple columns
+        //             data.forEach((cellData, colIndex) => {
+        //                 let targetColumnIndex = startColumnIndex + colIndex;
+        //                 if (targetColumnIndex < targetRow.children.length) {
+        //                     let targetCell = targetRow.children[
+        //                         targetColumnIndex];
+        //                     if (targetColumnIndex === 1 || targetColumnIndex ===
+        //                         2 || targetColumnIndex == 0) {
+        //                         const $inputElement = $(targetCell).find(
+        //                             "input");
+        //                         $inputElement.val(cellData.trim())
+        //                     }
+        //                 }
+        //                 // let targetColumnIndex = startColumnIndex + colIndex;
+        //                 // if (targetColumnIndex < targetRow.children.length) {
+        //                 //     let targetCell = targetRow.children[targetColumnIndex];
+        //                 //     targetCell.querySelector("p").textContent = cellData.trim();
+        //                 // }
+        //             });
+
+        //             // Add the row if it's new
+        //             // if (!existingRows[rowIndex]) {
+        //             // tableBody.appendChild(targetRow);
+        //             // }
+
+        //             tableBody.appendChild(targetRow);
+        //             // trigger $inputElement.trigger('input');
+        //             targetRow.querySelectorAll('input').forEach(input => {
+        //                 calculateGapAndAch(input);
+        //             });
+        //         });
+        //     });
+        // });
 
         const Toast = Swal.mixin({
             toast: true,
@@ -226,10 +310,12 @@
             const data = [];
             document.querySelectorAll(".data-row").forEach((row) => {
                 const dataRow = {
-                    nama_supervisor: row.querySelector('input[name="nama_supervisor"]')
+                    id_supervisor: row.querySelector('input[name="id_supervisor"]')
                         ?.value || '',
+                    id_monitoring_do_spk: row.querySelector('input[name="id_monitoring_do_spk"]')?.value || '',
                     target_do: row.querySelector('input[name="target_do"]')?.value || null,
                     act_do: row.querySelector('input[name="act_do"]')?.value || null,
+                    mpp: row.querySelector('input[name="mpp"]')?.value || null,
                     // gap_do: row.querySelector('input[name="gap_do"]')?.value || null,
                     // ach_do: row.querySelector('input[name="ach_do"]')?.value || null,
                 };
@@ -294,6 +380,21 @@
                         timer: 3000,
                     });
                 });
+        });
+
+        $('#date').on('change', function() {
+            let date = $(this).val();
+            // loading animation
+            $('#supervisor-table-body').html(`
+                <tr>
+                    <td colspan="5" class="text-center text-white">
+                        <i class="fa fa-spinner fa-spin"></i> Loading...
+                    </td>
+                </tr>
+            `);
+            $.get("{{ route('inputDO') }}", { date: date, ajax: 1 }, function(res) {
+                renderSupervisorRows(res.dataSupervisors);
+            });
         });
     });
 </script>

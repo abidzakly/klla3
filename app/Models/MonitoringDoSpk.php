@@ -21,11 +21,13 @@ class MonitoringDoSpk extends Model
     ];
 
     protected $fillable = [
-        'nama_supervisor',
+        'id_supervisor',
         'target_do',
         'act_do',
         'gap_do',
         'ach_do',
+        'mpp',
+        'productivity',
         'target_spk',
         'act_spk',
         'gap_spk',
@@ -34,23 +36,68 @@ class MonitoringDoSpk extends Model
         'date',
     ];
 
+    public function supervisor()
+    {
+        return $this->belongsTo(Supervisor::class, 'id_supervisor', 'supervisor_id');
+    }
+
+    // public function getAchDoAttribute($value)
+    // {
+    //     return round($value);
+    // }
+
+    // public function getGapDoAttribute($value)
+    // {
+    //     return round($value);
+    // }
+
+    // public function getAchSpkAttribute($value)
+    // {
+    //     return round($value);
+    // }
+
+    // public function getGapSpkAttribute($value)
+    // {
+    //     return round($value);
+    // }
+
     public function getAchDoAttribute($value)
     {
-        return (int) $value;
+        return round($value, 2);
     }
 
     public function getGapDoAttribute($value)
     {
-        return (int) $value;
+        return round($value, 2);
     }
 
     public function getAchSpkAttribute($value)
     {
-        return (int) $value;
+        return round($value, 2);
     }
 
     public function getGapSpkAttribute($value)
     {
-        return (int) $value;
+        return round($value, 2);
     }
+
+    // public function getGapDoRound()
+    // {
+    //     return round($this->gap_do);
+    // }
+
+    // public function getAchDoRound()
+    // {
+    //     return round($this->ach_do);
+    // }
+
+    // public function getGapSpkRound()
+    // {
+    //     return round($this->gap_spk);
+    // }
+
+    // public function getAchSpkRound()
+    // {
+    //     return round($this->ach_spk);
+    // }
 }

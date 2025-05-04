@@ -126,14 +126,14 @@
 
                 {{-- filter date start from and end from --}}
                 <div>
-                    <label for="date_start" class="text-black">Tanggal Awal:</label>
-                    <input type="date" id="date_start" name="date_start" value="{{ date('Y-m-d') }}"
+                    <label for="date" class="text-black">Tanggal:</label>
+                    <input type="date" id="date" name="date" value="{{ date('Y-m-d') }}"
                         prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))"
                         class="px-2 py-1 text-black rounded">
-                    <label for="date_end" class="text-black">Tanggal Akhir:</label>
-                    <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
+                    {{-- <label for="date_end" class="text-black">Tanggal Akhir:</label> --}}
+                    {{-- <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
                         prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))"
-                        class="px-2 py-1 text-black rounded">
+                        class="px-2 py-1 text-black rounded"> --}}
                     <button type="button" id="filter-button" onclick="filterByDate($(this))"
                         class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                         Filter
@@ -222,7 +222,9 @@
                         <th class="px-2 py-2 border border-2 border-black">Target DO</th>
                         <th class="px-2 py-2 border border-2 border-black">Act DO</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
-                        <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
+                        <th class="px-2 py-2 border border-2 border-black">MPP</th>
+                        <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>                        
+                        <th class="px-2 py-2 border border-2 border-black">Productivity</th>
                         <th class="px-2 py-2 border border-2 border-black">Target SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">ACT SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
@@ -257,6 +259,7 @@
             var target_do = parseFloat(row.find('[name="target_do"]').val() || row.find('[data-name="target_do"]')
                 .text()) || null;
             var act_do = parseFloat(row.find('[name="act_do"]').val()) || null;
+            var mpp = parseFloat(row.find('[name="mpp"]').val()) || null;
             var target_spk = parseFloat(row.find('[name="target_spk"]').val() || row.find('[data-name="target_spk"]')
                 .text()) || null;
             var act_spk = parseFloat(row.find('[name="act_spk"]').val()) || null;
@@ -271,8 +274,11 @@
             var gap_spk = act_spk - target_spk;
             var ach_spk = target_spk > 0 ? (act_spk / target_spk) * 100 : 0;
             row.find('[name="gap_spk"]').val(Math.round(gap_spk));
-            row.find('[name="ach_spk"]').val(Math.round(ach_spk) + '%');
-
+            row.find('[name="ach_spk"]').val(Math.round(ach_spk) + '%');                    
+                                    
+            var productivity = mpp > 0 ? (mpp / act_do) * 100 : 0;            
+            row.find('[name="productivity"]').val(Math.round(productivity) + '%');                        
+            
             var status = ach_do >= 100 ? 'ON THE TRACK' : 'PUSH SPK';
             var colorClass = ach_do >= 100 ? 'bg-green-500' : 'bg-red-500';
 
@@ -284,34 +290,34 @@
         let table;
 
         function validDate(e) {
-            const dateStart = document.getElementById("date_start").value;
-            const dateEnd = document.getElementById("date_end").value;
+            // const dateStart = document.getElementById("date_start").value;
+            // const dateEnd = document.getElementById("date_end").value;
 
-            console.log(new Date(dateStart) < new Date(dateEnd))
-            if (new Date(dateStart) > new Date(dateEnd)) {
-                Toast.fire({
-                    icon: "error",
-                    title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
-                    timer: 3000,
-                });
+            // console.log(new Date(dateStart) < new Date(dateEnd))
+            // if (new Date(dateStart) > new Date(dateEnd)) {
+            //     Toast.fire({
+            //         icon: "error",
+            //         title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
+            //         timer: 3000,
+            //     });
 
-                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
-                    'prev-date');
-                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
-            } else if (new Date(dateEnd) < new Date(dateStart)) {
-                Toast.fire({
-                    icon: "error",
-                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
-                    timer: 3000,
-                });
+            //     document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+            //         'prev-date');
+            //     document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            // } else if (new Date(dateEnd) < new Date(dateStart)) {
+            //     Toast.fire({
+            //         icon: "error",
+            //         title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
+            //         timer: 3000,
+            //     });
 
-                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
-                    'prev-date');
-                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
-            } else {
-                document.getElementById("date_start").setAttribute('prev-date', dateStart);
-                document.getElementById("date_end").setAttribute('prev-date', dateEnd);
-            }
+            //     document.getElementById("date_start").value = document.getElementById("date_start").getAttribute(
+            //         'prev-date');
+            //     document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            // } else {
+            //     document.getElementById("date_start").setAttribute('prev-date', dateStart);
+            //     document.getElementById("date_end").setAttribute('prev-date', dateEnd);
+            // }
         }
 
         function filterByDate(e) {
@@ -323,8 +329,8 @@
         }
 
         function resetFilter() {
-            document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
-            document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
+            document.getElementById("date").value = "{{ date('Y-m-d') }}";
+            // document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
             table.ajax.reload();
         }
 
@@ -341,11 +347,12 @@
                 ajax: {
                     url: "{{ route('monitoring_do_spk.index') }}",
                     data: function(d) {
-                        d.start_date = $('#date_start').val();
-                        d.end_date = $('#date_end').val();
+                        d.date = $('#date').val();
+                        // d.end_date = $('#date_end').val();
                     }
                 },
-                columns: [{
+                columns: [
+                    {
                         data: 'nama_supervisor',
                         name: 'nama_supervisor',
                         searchable: true
@@ -359,22 +366,32 @@
                         data: 'act_do',
                         name: 'act_do',
                         searchable: true
-                    },
+                    }, 
                     {
                         data: 'gap_do',
                         name: 'gap_do',
                         searchable: true
-                    },
+                    },                   
+                    {
+                        data: 'mpp',
+                        name: 'mpp',
+                        searchable: true
+                    },                                       
                     {
                         data: 'ach_do',
                         name: 'ach_do',
                         searchable: true
                     },
                     {
+                        data: 'productivity',
+                        name: 'productivity',
+                        searchable: true
+                    },                    
+                    {
                         data: 'target_spk',
                         name: 'target_spk',
                         searchable: true
-                    },
+                    },                 
                     {
                         data: 'act_spk',
                         name: 'act_spk',
@@ -423,6 +440,8 @@
                             var name = $(this).data('name');
                             var tdWidth = $(this)
                                 .width(); // Ambil width td sebelum diubah menjadi input
+                                
+                            if(name == 'nama_supervisor') return;
 
                             if (name === 'gap_do' || name === 'ach_do' || name ===
                                 'gap_spk' || name === 'ach_spk' || name === 'status') {
@@ -596,7 +615,7 @@
 
             document.getElementById("submit-button").addEventListener("click", function() {
                 const data = {
-                    nama_supervisor: document.querySelector('input[name="nama_supervisor"]').value,
+                    id_supervisor: document.querySelector('input[name="id_supervisor"]').value,
                     target_do: document.querySelector('input[name="target_do"]').value,
                     act_do: document.querySelector('input[name="act_do"]').value,
                     target_spk: document.querySelector('input[name="target_spk"]').value,
@@ -646,10 +665,10 @@
         });
 
         function exportData() {
-            const startDate = document.getElementById("date_start").value;
-            const endDate = document.getElementById("date_end").value;
+            const date = document.getElementById("date").value;
+            // const endDate = document.getElementById("date_end").value;
 
-            window.location.href = `{{ route('monitoring_do_spk.export') }}?start_date=${startDate}&end_date=${endDate}`;
+            window.location.href = `{{ route('monitoring_do_spk.export') }}?date=${date}`;
         }
     </script>
 </body>
