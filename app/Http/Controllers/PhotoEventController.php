@@ -140,17 +140,18 @@ class PhotoEventController extends Controller
                 $jenisEvent = strtolower(str_replace(' ', '-', $photoEventType->photo_event_type_name));
                 $fileNameOriginal = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $ext = $file->getClientOriginalExtension();
-                $fileName = $request->photo_event_file_name[$index] . '.' . $ext;
+                $baseFileName = $request->photo_event_file_name[$index];
+                $fileName = $baseFileName . '.' . $ext;
                 $newPath = "photo-event/{$jenisEvent}/{$branchName}/{$fileName}";
 
                 $counter = 1;
                 while (Storage::exists($newPath)) {
-                    $fileName = "{$fileNameOriginal}($counter).{$ext}";
+                    $fileName = "{$baseFileName}({$counter}).{$ext}";
                     $newPath = "photo-event/{$jenisEvent}/{$branchName}/{$fileName}";
                     $counter++;
                 }
 
-                $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}/" . $request->photo_event_date[$index], $fileName);
+                $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}/", $fileName);
 
                 PhotoEvent::create([
                     'photo_event_type_id'    => $request->photo_event_type_id,
@@ -158,8 +159,8 @@ class PhotoEventController extends Controller
                     'file_path'              => $path,
                     'photo_event_name'       => $request->photo_event_name[$index],
                     'photo_event_location'   => $request->photo_event_location[$index],
-                    'photo_event_caption'    => $request->photo_event_caption[$index], // field baru
-                    'photo_event_date'       => $request->photo_event_date[$index],    // field baru
+                    'photo_event_caption'    => $request->photo_event_caption[$index],
+                    'photo_event_date'       => $request->photo_event_date[$index],
                 ]);
             }
 
