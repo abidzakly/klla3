@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\SPK;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use App\Helpers\Response;
+use Carbon\Carbon;
 
 class SPKController extends Controller
 {
@@ -16,8 +18,13 @@ class SPKController extends Controller
         DB::beginTransaction();
 
         try {
+            if ($request->branch_id) {
+                $branch = Branch::findOrFail($request->branch_id);
+            }
+
             if (count($request->data) == 1) {
                 $rules = [
+                    'branch_id' => 'nullable|exists:branches,id_branch',
                     'data.*.nomor_spk' => 'required|string',
                     'data.*.customer_name_1' => 'required|string',
                     'data.*.customer_name_2' => 'required|string',
@@ -33,7 +40,7 @@ class SPKController extends Controller
                     'data.*.customer_type' => 'required|string',
                     'data.*.fleet' => 'required|string',
                     'data.*.color_code' => 'required|string',
-                    'data.*.branch_id' => 'required|string',
+                    'data.*.branch_id_text' => 'required|string',
                     'data.*.type_id' => 'required|string',
                     'data.*.valid' => 'required|boolean',
                     'data.*.valid_date' => 'required|date',
@@ -49,9 +56,11 @@ class SPKController extends Controller
                     'data.*.city' => 'nullable|string',
                     'data.*.district' => 'nullable|string',
                     'data.*.sub_district' => 'nullable|string',
+                    'data.*.date_spk' => 'required|date',
                 ];
 
                 $message = [
+                    'branch_id.exists' => 'Cabang tidak valid.',
                     'data.*.nomor_spk.required' => 'Nomor SPK tidak boleh kosong.',
                     'data.*.customer_name_1.required' => 'Nama Customer 1 tidak boleh kosong.',
                     'data.*.customer_name_2.required' => 'Nama Customer 2 tidak boleh kosong.',
@@ -66,7 +75,7 @@ class SPKController extends Controller
                     'data.*.total_payment.numeric' => 'Total Pembayaran harus berupa angka.',
                     'data.*.customer_type.required' => 'Tipe Customer tidak boleh kosong.',
                     'data.*.color_code.required' => 'Kode Warna tidak boleh kosong.',
-                    'data.*.branch_id.required' => 'ID Cabang tidak boleh kosong.',
+                    'data.*.branch_id_text.required' => 'ID Cabang tidak boleh kosong.',
                     'data.*.type_id.required' => 'ID Tipe tidak boleh kosong.',
                     'data.*.valid.required' => 'Valid tidak boleh kosong.',
                     'data.*.valid.boolean' => 'Valid harus berupa boolean.',
@@ -74,13 +83,14 @@ class SPKController extends Controller
                     'data.*.valid_date.date' => 'Tanggal Valid harus berupa tanggal.',
                     'data.*.spk_status.required' => 'Status SPK tidak boleh kosong.',
                     'data.*.fleet.required' => 'Fleet tidak boleh kosong.',
+                    'data.*.date_spk.required' => 'Tanggal SPK harus diisi.',
+                    'data.*.date_spk.date' => 'Format tanggal SPK tidak valid.',
                 ];
 
                 $validator = Validator::make($request->all(), $rules, $message);
 
                 if ($validator->fails()) {
                     return Response::errorValidate($validator->errors(), 'Validation failed.');
-                    // return Response::error(null, 'Data SPK gagal disimpan. Pastikan semua data terisi.');
                 }
             }
 
@@ -94,6 +104,7 @@ class SPKController extends Controller
                 }
 
                 $row['valid'] = $row['valid'] ? 1 : 0;
+                $row['branch_id'] = $request->branch_id;
                 SPK::create($row);
             }
 
@@ -108,9 +119,21 @@ class SPKController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = SPK::query();
+            $data = SPK::with('branch');
 
-            $listSearch = ['nomor_spk', 'customer_name_1', 'customer_name_2', 'payment_method', 'leasing', 'model', 'type', 'color', 'sales', 'branch', 'status', 'total_payment', 'customer_type', 'fleet', 'color_code', 'branch_id', 'type_id', 'valid', 'valid_date', 'custom_type', 'spk_status', 'supervisor', 'date_if_credit_agreement', 'po_date', 'po_number', 'buyer_status', 'religion', 'province', 'city', 'district', 'sub_district'];
+            // Branch filtering
+            if ($request->branch_id) {
+                $data->where('branch_id', $request->branch_id);
+            }
+
+            // Date filtering by date_spk
+            if ($request->start_date && $request->end_date) {
+                $startDate = Carbon::parse($request->start_date)->startOfDay();
+                $endDate = Carbon::parse($request->end_date)->endOfDay();
+                $data->whereBetween('date_spk', [$startDate, $endDate]);
+            }
+
+            $listSearch = ['nomor_spk', 'customer_name_1', 'customer_name_2', 'payment_method', 'leasing', 'model', 'type', 'color', 'sales', 'branch', 'status', 'total_payment', 'customer_type', 'fleet', 'color_code', 'branch_id_text', 'type_id', 'valid', 'valid_date', 'custom_type', 'spk_status', 'supervisor', 'date_if_credit_agreement', 'po_date', 'po_number', 'buyer_status', 'religion', 'province', 'city', 'district', 'sub_district'];
 
             $data = self::filterDatatable($data, $listSearch);
 
@@ -161,8 +184,8 @@ class SPKController extends Controller
                 ->addColumn('color_code', function ($row) {
                     return '<div class="editable" name="color_code">' . $row->color_code . '</div>';
                 })
-                ->addColumn('branch_id', function ($row) {
-                    return '<div class="editable" name="branch_id">' . $row->branch_id . '</div>';
+                ->addColumn('branch_id_text', function ($row) {
+                    return '<div class="editable" name="branch_id_text">' . $row->branch_id_text . '</div>';
                 })
                 ->addColumn('type_id', function ($row) {
                     return '<div class="editable" name="type_id">' . $row->type_id . '</div>';
@@ -172,7 +195,7 @@ class SPKController extends Controller
                     return '<div class="editable" name="valid" data-current-value="' . $row->valid . '">' . $checkbox . '</div>';
                 })
                 ->addColumn('valid_date', function ($row) {
-                    return '<div class="editable" name="valid_date">' . $row->valid_date . '</div>';
+                    return '<div class="editable" name="valid_date">' . ($row->valid_date ? $row->valid_date->format('Y-m-d') : '') . '</div>';
                 })
                 ->addColumn('custom_type', function ($row) {
                     return '<div class="editable" name="custom_type">' . $row->custom_type . '</div>';
@@ -184,10 +207,10 @@ class SPKController extends Controller
                     return '<div class="editable" name="supervisor">' . $row->supervisor . '</div>';
                 })
                 ->addColumn('date_if_credit_agreement', function ($row) {
-                    return '<div class="editable" name="date_if_credit_agreement">' . $row->date_if_credit_agreement . '</div>';
+                    return '<div class="editable" name="date_if_credit_agreement">' . ($row->date_if_credit_agreement ? $row->date_if_credit_agreement->format('Y-m-d') : '') . '</div>';
                 })
                 ->addColumn('po_date', function ($row) {
-                    return '<div class="editable" name="po_date">' . $row->po_date . '</div>';
+                    return '<div class="editable" name="po_date">' .  ($row->po_date ? $row->po_date->format('Y-m-d') : '') . '</div>';
                 })
                 ->addColumn('po_number', function ($row) {
                     return '<div class="editable" name="po_number">' . $row->po_number . '</div>';
@@ -210,72 +233,81 @@ class SPKController extends Controller
                 ->addColumn('sub_district', function ($row) {
                     return '<div class="editable" name="sub_district">' . $row->sub_district . '</div>';
                 })
+                ->addColumn('date_spk', function ($row) {
+                    return '<div class="editable" name="date_spk">' . ($row->date_spk ? $row->date_spk->format('Y-m-d') : '') . '</div>';
+                })
                 ->addColumn('action', function ($row) {
-                    $editButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-green-500 rounded-lg hover:bg-green-600 edit" 
+                    $editButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-green-500 rounded-lg hover:bg-green-600 edit"
                         data-id="' . $row->id_spk . '">
                         Edit <i class="ti ti-edit"></i>
                     </button>';
 
-                    $deleteButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-red-500 rounded-lg hover:bg-red-600 delete" 
+                    $deleteButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-red-500 rounded-lg hover:bg-red-600 delete"
                         data-id="' . $row->id_spk . '">
                         Delete <i class="ti ti-trash"></i>
                     </button>';
 
                     return '<div class="flex gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
-                ->rawColumns(['nomor_spk', 'customer_name_1', 'customer_name_2', 'payment_method', 'leasing', 'model', 'type', 'color', 'sales', 'branch', 'status', 'total_payment', 'customer_type', 'fleet', 'color_code', 'branch_id', 'type_id', 'valid', 'valid_date', 'custom_type', 'spk_status', 'supervisor', 'date_if_credit_agreement', 'po_date', 'po_number', 'buyer_status', 'religion', 'province', 'city', 'district', 'sub_district', 'action'])
-                ->order(function ($query) {
-                    if (request()->has('order')) {
-                        $order = request('order')[0];
-                        $columns = request('columns');
-                        $query->orderBy($columns[$order['column']]['data'], $order['dir']);
-                    }
-                })
+                ->rawColumns(['nomor_spk', 'customer_name_1', 'customer_name_2', 'payment_method', 'leasing', 'model', 'type', 'color', 'sales', 'branch', 'status', 'total_payment', 'customer_type', 'fleet', 'color_code', 'branch_id_text', 'type_id', 'valid', 'valid_date', 'custom_type', 'spk_status', 'supervisor', 'date_if_credit_agreement', 'po_date', 'po_number', 'buyer_status', 'religion', 'province', 'city', 'district', 'sub_district', 'date_spk', 'action'])
                 ->make(true);
         }
 
-        return view('SPK.index');
+        $branch = Branch::where('branch_name', $request->branch)->first() ?? Branch::all()->first();
+        return view('SPK.index', compact('branch'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('SPK.create');
+        // Jika ada parameter branch, cari berdasarkan nama branch
+        // Jika tidak ada atau tidak ditemukan, gunakan branch yang pertama
+        if ($request->has('branch') && $request->branch) {
+            $branch = Branch::where('branch_name', $request->branch)->first();
+            if (!$branch) {
+                $branch = Branch::all()->first();
+            }
+        } else {
+            $branch = Branch::all()->first();
+        }
+
+        return view('SPK.create', compact('branch'));
     }
 
     public function update(Request $request, $id)
     {
         $rules = [
-            'nomor_spk' => 'nullable|string',
-            'customer_name_1' => 'nullable|string',
-            'customer_name_2' => 'nullable|string',
-            'payment_method' => 'nullable|string',
-            'leasing' => 'nullable|string',
-            'model' => 'nullable|string',
-            'type' => 'nullable|string',
-            'color' => 'nullable|string',
-            'sales' => 'nullable|string',
-            'branch' => 'nullable|string',
-            'status' => 'nullable|string',
-            'total_payment' => 'nullable|numeric',
-            'customer_type' => 'nullable|string',
-            'fleet' => 'nullable|string',
-            'color_code' => 'nullable|string',
-            'branch_id' => 'nullable|string',
-            'type_id' => 'nullable|string',
-            'valid' => 'nullable|boolean',
-            'valid_date' => 'nullable|date',
-            'custom_type' => 'nullable|string',
-            'spk_status' => 'nullable|string',
-            'supervisor' => 'nullable|string',
-            'date_if_credit_agreement' => 'nullable|date',
-            'po_date' => 'nullable|date',
-            'po_number' => 'nullable|string',
-            'buyer_status' => 'nullable|string',
-            'religion' => 'nullable|string',
-            'province' => 'nullable|string',
-            'city' => 'nullable|string',
-            'district' => 'nullable|string',
-            'sub_district' => 'nullable|string',
+            'nomor_spk' => 'required|string',
+            'customer_name_1' => 'required|string',
+            'customer_name_2' => 'required|string',
+            'payment_method' => 'required|string',
+            'leasing' => 'required|string',
+            'model' => 'required|string',
+            'type' => 'required|string',
+            'color' => 'required|string',
+            'sales' => 'required|string',
+            'branch' => 'required|string',
+            'status' => 'required|string',
+            'total_payment' => 'required|numeric',
+            'customer_type' => 'required|string',
+            'fleet' => 'required|string',
+            'color_code' => 'required|string',
+            'branch_id_text' => 'required|string',
+            'type_id' => 'required|string',
+            'valid' => 'required|boolean',
+            'valid_date' => 'required|date',
+            'custom_type' => 'required|string',
+            'spk_status' => 'required|string',
+            'supervisor' => 'required|string',
+            'date_if_credit_agreement' => 'required|date',
+            'po_date' => 'required|date',
+            'po_number' => 'required|string',
+            'buyer_status' => 'required|string',
+            'religion' => 'required|string',
+            'province' => 'required|string',
+            'city' => 'required|string',
+            'district' => 'required|string',
+            'sub_district' => 'required|string',
+            'date_spk' => 'required|date',
         ];
 
         $message = [
@@ -293,7 +325,7 @@ class SPKController extends Controller
             'total_payment.numeric' => 'Total Pembayaran harus berupa angka.',
             'customer_type.required' => 'Tipe Customer tidak boleh kosong.',
             'color_code.required' => 'Kode Warna tidak boleh kosong.',
-            'branch_id.required' => 'ID Cabang tidak boleh kosong.',
+            'branch_id_text.required' => 'ID Cabang tidak boleh kosong.',
             'type_id.required' => 'ID Tipe tidak boleh kosong.',
             'valid.required' => 'Valid tidak boleh kosong.',
             'valid.boolean' => 'Valid harus berupa boolean.',
@@ -314,7 +346,9 @@ class SPKController extends Controller
 
         try {
             $spk = SPK::findOrFail($id);
-            $spk->update($request->all());
+            $data = $validator->validated();
+            $data['branch_id'] = $spk->branch_id;
+            $spk->update($data);
             $spk->valid = $request->valid ? 1 : 0;
             $spk->save();
 

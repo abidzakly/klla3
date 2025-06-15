@@ -14,5 +14,21 @@ class Invitation extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'branch_id',
+        'name',
+        'address',
+        'number_phone',
+        'sales_invitation',
+        'invitation_date',
+    ];
+
+    protected $casts = [
+        'invitation_date' => 'datetime',
+    ];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id_branch');
+    }
 }

@@ -51,12 +51,14 @@ Route::get('/dashboard', function () {
     return view('dashboard', $data);
 })->name('dashboard');
 
-Route::get('/dataSPK', function () {
-    return view('SPK.index');
+Route::get('/dataSPK', function (Request $request) {
+    $branch = Branch::where('branch_name', $request->branch)->first() ?? Branch::all()->first();
+    return view('SPK.index', compact('branch'));
 })->name('data.spk');
 
-Route::get('/dataUndangan', function () {
-    return view('invitation.index');
+Route::get('/dataUndangan', function (Request $request) {
+    $branch = Branch::where('branch_name', $request->branch)->first() ?? Branch::all()->first();
+    return view('invitation.index', compact('branch'));
 })->name('data.undangan');
 
 Route::resource('invitation', InvitationController::class);

@@ -76,13 +76,36 @@
         <div class="relative w-full flex flex-col rounded-lg shadow-md items-center justify-center group p-6 mb-4">
             <div class="w-full min-h-[80vh] h-full absolute inset-0 bg-green-800  rounded-lg"></div>
 
-            <div class="relative mt-3 w-full flex items-center px-6 font-bold text-white">
-                <a href="{{ route('spk.index') }}"><i style="font-size: 30px;"
+            <div class="relative mt-3 w-full flex items-center px-6 font-bold text-white z-20">
+                <a href="{{ route('spk.index', ['branch' => $branch->branch_name]) }}"><i style="font-size: 30px;"
                         class="fa-solid fa-arrow-left text-2xl ml-2"></i></a>
-                <p style="font-size: 30px;" class="absolute left-1/2 -translate-x-1/2 text-xl">Data SPK</p>
+
+                <div class="absolute left-1/2 -translate-x-1/2 text-xl flex items-center gap-4">
+                    <p style="font-size: 30px;">Data SPK -</p>
+                    <div class="relative">
+                        <button id="branchDropdownButton" class="text-xl font-bold text-white bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700">
+                            {{ $branch->branch_name }} ▼
+                        </button>
+                        <div id="branchDropdownMenu"
+                            class="hidden absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg w-52 max-h-60 overflow-y-auto transition-all duration-300 opacity-0 transform scale-95 z-[999]">
+                            @foreach (App\Models\Branch::all() as $branchItem)
+                                <button onclick="changeBranch('{{ $branchItem->id_branch }}', '{{ $branchItem->branch_name }}')"
+                                    class="block px-5 py-3 text-black hover:bg-gray-100 transition-all duration-300 w-full text-left {{ $branchItem->id_branch == $branch->id_branch ? 'bg-green-100 font-semibold' : '' }}">
+                                    {{ $branchItem->branch_name }}
+                                    @if($branchItem->id_branch == $branch->id_branch)
+                                        <i class="fas fa-check text-green-600 float-right mt-1"></i>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="relative flex justify-center items-center flex-col w-full">
+                <!-- Branch Selection (hidden input) -->
+                <input type="hidden" id="branch_id" value="{{ $branch->id_branch }}">
+
                 <!-- Scrollable Wrapper -->
                 <div class="w-full overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-400">
                     <table class="mt-4 min-w-max border-collapse">
@@ -120,6 +143,7 @@
                                 <th class="border-2 border-black px-2 py-2 w-48">City</th>
                                 <th class="border-2 border-black px-2 py-2 w-48">District</th>
                                 <th class="border-2 border-black px-2 py-2 w-48">Sub District</th>
+                                <th class="border-2 border-black px-2 py-2 w-48">Date SPK</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -223,7 +247,7 @@
                                 </td>
                                 <td class="text-white text-xl ml-4 border-2 border-black w-20">
                                     <div class="m-2 bg-transparent text-white rounded-md">
-                                        <input type="text" name="branch_id"
+                                        <input type="text" name="branch_id_text"
                                             class=" w-full bg-transparent paste-input px-1 text-center">
                                     </div>
                                 </td>
@@ -317,6 +341,12 @@
                                             class=" w-full bg-transparent paste-input px-1 text-center">
                                     </div>
                                 </td>
+                                <td class="text-white text-xl ml-4 border-2 border-black w-20">
+                                    <div class="m-2 bg-transparent text-white rounded-md">
+                                        <input type="date" name="date_spk"
+                                            class=" w-full bg-transparent paste-input px-1 text-center" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -366,11 +396,11 @@
                             'customer_name_2', 'payment_method', 'leasing', 'model',
                             'type', 'color', 'sales', 'branch', 'status',
                             'total_payment', 'customer_type', 'fleet', 'color_code',
-                            'branch_id', 'type_id', 'valid', 'valid_date',
+                            'branch_id_text', 'type_id', 'valid', 'valid_date',
                             'custom_type', 'spk_status', 'supervisor',
                             'date_if_credit_agreement', 'po_date', 'po_number',
                             'buyer_status', 'religion', 'province', 'city',
-                            'district', 'sub_district'
+                            'district', 'sub_district', 'date_spk'
                         ];
                         input.type = "text";
                         input.name = nameColumn[targetRow.children.length];
@@ -398,13 +428,13 @@
                                 'payment_method', 'leasing', 'model',
                                 'type', 'color', 'sales', 'branch',
                                 'status', 'total_payment', 'customer_type',
-                                'fleet', 'color_code', 'branch_id',
+                                'fleet', 'color_code', 'branch_id_text',
                                 'type_id', 'valid', 'valid_date',
                                 'custom_type', 'spk_status', 'supervisor',
                                 'date_if_credit_agreement', 'po_date',
                                 'po_number', 'buyer_status', 'religion',
                                 'province', 'city', 'district',
-                                'sub_district'
+                                'sub_district', 'date_spk'
                             ];
                             targetCell.querySelector("input").name = nameColumn[
                                 targetColumnIndex];
@@ -462,7 +492,7 @@
                         ?.value || '',
                     fleet: row.querySelector('input[name="fleet"]')?.value || '',
                     color_code: row.querySelector('input[name="color_code"]')?.value || '',
-                    branch_id: row.querySelector('input[name="branch_id"]')?.value || '',
+                    branch_id_text: row.querySelector('input[name="branch_id_text"]')?.value || '',
                     type_id: row.querySelector('input[name="type_id"]')?.value || '',
                     valid: row.querySelector('input[name="valid"]')?.checked || false,
                     valid_date: row.querySelector('input[name="valid_date"]')?.value || '',
@@ -482,6 +512,7 @@
                     district: row.querySelector('input[name="district"]')?.value || '',
                     sub_district: row.querySelector('input[name="sub_district"]')?.value ||
                         '',
+                    date_spk: row.querySelector('input[name="date_spk"]')?.value || '',
                 };
 
                 data.push(dataRow);
@@ -489,6 +520,7 @@
 
             const requestBody = {
                 data: data,
+                branch_id: document.getElementById('branch_id').value,
                 type: 'spk'
             }
             fetch("{{ route('spk.store') }}", {
@@ -539,7 +571,9 @@
                                         }
                                     });
                             });
-                            window.location.href = "{{ route('spk.index') }}";
+                            // Use selected branch for redirect
+                            const branchName = window.selectedBranchName || '{{ $branch->branch_name }}';
+                            window.location.href = "{{ route('spk.index') }}" + '?branch=' + encodeURIComponent(branchName);
                         });
                     }
                 })
@@ -556,6 +590,41 @@
                     $(this).html('Submit');
                 });
         });
+    });
+
+    function changeBranch(branchId, branchName) {
+        // Update hidden input and button text
+        document.getElementById('branch_id').value = branchId;
+        document.getElementById('branchDropdownButton').innerHTML = branchName + ' ▼';
+
+        // Hide dropdown
+        document.getElementById('branchDropdownMenu').classList.add('hidden', 'opacity-0', 'scale-95');
+
+        // Update back button href with selected branch
+        const backButton = document.querySelector('a[href*="spk.index"]');
+        if (backButton) {
+            const baseUrl = backButton.href.split('?')[0];
+            backButton.href = baseUrl + '?branch=' + encodeURIComponent(branchName);
+        }
+
+        // Update success redirect URL for form submission
+        window.selectedBranchName = branchName;
+    }
+
+    // Branch dropdown functionality
+    const branchDropdownButton = document.getElementById("branchDropdownButton");
+    const branchDropdownMenu = document.getElementById("branchDropdownMenu");
+
+    branchDropdownButton.addEventListener("click", () => {
+        branchDropdownMenu.classList.toggle("hidden");
+        branchDropdownMenu.classList.toggle("opacity-0");
+        branchDropdownMenu.classList.toggle("scale-95");
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!branchDropdownButton.contains(event.target) && !branchDropdownMenu.contains(event.target)) {
+            branchDropdownMenu.classList.add("hidden", "opacity-0", "scale-95");
+        }
     });
 </script>
 

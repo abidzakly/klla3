@@ -15,5 +15,20 @@ class SPK extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $guarded = [];
+    protected $guarded = [
+    ];
+
+    protected $casts = [
+        'valid' => 'boolean',
+        'valid_date' => 'date',
+        'date_if_credit_agreement' => 'date',
+        'po_date' => 'date',
+        'date_spk' => 'datetime',
+        'total_payment' => 'decimal:2',
+    ];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id_branch');
+    }
 }

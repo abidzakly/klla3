@@ -155,7 +155,45 @@
         <h1 class="text-xl font-bold mx-auto text-center" style="font-size: 36px;">Report Big Event</h1>
     </nav>
 
-    <div class="flex w-[80%] justify-center mt-6">
+    <div class="w-[80%] justify-center mt-6">
+        <div class="relative w-full flex items-center justify-start px-6 font-bold text-white mt-4 mb-3 z-50">
+            <div class="relative">
+                <button id="branchDropdownButton" class="text-xl font-bold text-white bg-green-600 px-6 py-2 rounded-lg">
+                    {{ $branch->branch_name }} ▼
+                </button>
+
+                <div id="branchDropdownMenu"
+                    class="hidden absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg w-52 max-h-60 overflow-y-auto transition-all duration-300 opacity-0 transform scale-95 z-50">
+                    <input type="hidden" id="branchId" value="{{ $branch->id_branch }}">
+                    @foreach (App\Models\Branch::all() as $branchItem)
+                        <button onclick="changeBranch('{{ $branchItem->id_branch }}', '{{ $branchItem->branch_name }}')" class="block px-5 py-3 text-black hover:bg-gray-100 transition-all duration-300 w-full text-left">
+                            {{ $branchItem->branch_name }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- filter date start from and end from --}}
+            <div class="flex items-center gap-4 ml-auto px-4 py-3 rounded bg-green-600">
+                <label for="date_start" class="">Tanggal Awal:</label>
+                <input type="date" id="date_start" name="date_start" value="{{ date('Y-m-d') }}"
+                    prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))" class="px-2 py-1 text-white rounded">
+                <label for="date_end" class="">Tanggal Akhir:</label>
+                <input type="date" id="date_end" name="date_end" value="{{ date('Y-m-d') }}"
+                    prev-date="{{ date('Y-m-d') }}" onchange="validDate($(this))" class="px-2 py-1 rounded">
+                <div class="flex items-center gap-2">
+                    <button type="button" id="filter-button" onclick="filterByDate($(this))"
+                        class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-800">
+                        Filter
+                    </button>
+                    <button type="button" id="reset-button" onclick="resetFilter()"
+                        class="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="relative w-full flex flex-col rounded-lg shadow-md items-center justify-center group p-6 mb-4">
             <div class="w-full min-h-[80vh] h-full absolute inset-0 bg-green-800  rounded-lg"></div>
 
@@ -163,7 +201,7 @@
                 <a href="{{ route('dashboard') }}"><i style="font-size: 30px;"
                         class="fa-solid fa-arrow-left text-2xl ml-2"></i></a>
                 <p style="font-size: 30px;" class="text-xl">Data SPK</p>
-                <a href="{{ route('spk.create') }}"
+                <a href="{{ route('spk.create', ['branch' => $branch->branch_name]) }}" id="createButton"
                     class="inline-block px-4 py-2 mb-4 text-white bg-green-500 rounded hover:bg-green-600">
                     Tambah Data SPK
                 </a>
@@ -206,6 +244,7 @@
                                 <th class="border-2 border-black px-2 py-2 w-48">CITY</th>
                                 <th class="border-2 border-black px-2 py-2 w-48">DISTRICT</th>
                                 <th class="border-2 border-black px-2 py-2 w-48">SUB DISTRICT</th>
+                                <th class="border-2 border-black px-2 py-2 w-48">Date SPK</th>
                                 <th class="border-2 border-black px-2 py-2 w-48">Aksi</th>
                             </tr>
                         </thead>
@@ -218,6 +257,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script>
+        let table;
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -236,10 +276,17 @@
                 }
             });
 
-            var table = $('#data-table').DataTable({
+            table = $('#data-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('spk.index') }}",
+                ajax: {
+                    url: "{{ route('spk.index') }}",
+                    data: function(d) {
+                        d.branch_id = document.getElementById('branchId').value;
+                        d.start_date = $('#date_start').val();
+                        d.end_date = $('#date_end').val();
+                    }
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         orderable: false,
@@ -321,8 +368,8 @@
                         searchable: true
                     },
                     {
-                        data: 'branch_id',
-                        name: 'branch_id',
+                        data: 'branch_id_text',
+                        name: 'branch_id_text',
                         searchable: true
                     },
                     {
@@ -401,6 +448,11 @@
                         searchable: true
                     },
                     {
+                        data: 'date_spk',
+                        name: 'date_spk',
+                        searchable: true
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         orderable: false,
@@ -432,10 +484,18 @@
                             } else if (name === 'address') {
                                 $(this).attr('data-current-value', value);
                                 $(this).attr('readonly', false);
-                            } else if (name === 'valid_date' || name ===
-                                'date_if_credit_agreement' || name === 'po_date') {
+                            } else if (name === 'valid_date' || name === 'date_if_credit_agreement' || name === 'po_date' || name === 'date_spk') {
+                                // Format date properly for input
+                                let dateValue = value;
+                                if (value && value !== '') {
+                                    // Convert to YYYY-MM-DD format if needed
+                                    const date = new Date(value);
+                                    if (!isNaN(date.getTime())) {
+                                        dateValue = date.toISOString().split('T')[0];
+                                    }
+                                }
                                 $(this).html('<input type="date" name="' + name +
-                                    '" value="' + value +
+                                    '" value="' + dateValue +
                                     '" class="border border-gray-300 form-control editable" style="width:' +
                                     tdWidth +
                                     'px; color: white;" data-current-value="' +
@@ -479,7 +539,21 @@
                     if (name === 'valid') {
                         data[name] = $(this).is(':checked') ? 1 : 0;
                     } else {
-                        data[name] = $(this).val();
+                        var value = $(this).val();
+                        // Handle empty values for required fields
+                        if (value === '' || value === null) {
+                            if (name === 'leasing' || name === 'custom_type' || name === 'supervisor' ||
+                                name === 'date_if_credit_agreement' || name === 'po_date' ||
+                                name === 'po_number' || name === 'buyer_status' || name === 'religion' ||
+                                name === 'province' || name === 'city' || name === 'district' ||
+                                name === 'sub_district') {
+                                data[name] = null;
+                            } else {
+                                data[name] = '';
+                            }
+                        } else {
+                            data[name] = value;
+                        }
                     }
                 });
                 $.ajax({
@@ -595,6 +669,101 @@
                     }
                 });
             });
+        });
+
+        function validDate(e) {
+            const dateStart = document.getElementById("date_start").value;
+            const dateEnd = document.getElementById("date_end").value;
+
+            if (new Date(dateStart) > new Date(dateEnd)) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+                Toast.fire({
+                    icon: "error",
+                    title: 'Tanggal awal tidak boleh lebih besar dari tanggal akhir!',
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute('prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else if (new Date(dateEnd) < new Date(dateStart)) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+                Toast.fire({
+                    icon: "error",
+                    title: 'Tanggal akhir tidak boleh lebih kecil dari tanggal awal!',
+                    timer: 3000,
+                });
+
+                document.getElementById("date_start").value = document.getElementById("date_start").getAttribute('prev-date');
+                document.getElementById("date_end").value = document.getElementById("date_end").getAttribute('prev-date');
+            } else {
+                document.getElementById("date_start").setAttribute('prev-date', dateStart);
+                document.getElementById("date_end").setAttribute('prev-date', dateEnd);
+            }
+        }
+
+        function filterByDate(e) {
+            $(e).prop('disabled', true);
+            $(e).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+            table.ajax.reload();
+            $('#filter-button').prop('disabled', false);
+            $('#filter-button').html('Filter');
+        }
+
+        function resetFilter() {
+            document.getElementById("date_start").value = "{{ date('Y-m-d') }}";
+            document.getElementById("date_end").value = "{{ date('Y-m-d') }}";
+            table.ajax.reload();
+        }
+
+        function changeBranch(branchId, branchName) {
+            // Update hidden input and button text
+            document.getElementById('branchId').value = branchId;
+            document.getElementById('branchDropdownButton').innerHTML = branchName + ' ▼';
+
+            // Hide dropdown
+            document.getElementById('branchDropdownMenu').classList.add('hidden', 'opacity-0', 'scale-95');
+
+            // Update create button link with selected branch
+            const createButton = document.getElementById('createButton');
+            if (createButton) {
+                createButton.href = "{{ route('spk.create') }}" + '?branch=' + encodeURIComponent(branchName);
+            }
+
+            // Reload table with new branch
+            table.ajax.reload(null, false);
+        }
+
+        const branchDropdownButton = document.getElementById("branchDropdownButton");
+        const branchDropdownMenu = document.getElementById("branchDropdownMenu");
+
+        branchDropdownButton.addEventListener("click", () => {
+            branchDropdownMenu.classList.toggle("hidden");
+            branchDropdownMenu.classList.toggle("opacity-0");
+            branchDropdownMenu.classList.toggle("scale-95");
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!branchDropdownButton.contains(event.target) && !branchDropdownMenu.contains(event.target)) {
+                branchDropdownMenu.classList.add("hidden", "opacity-0", "scale-95");
+            }
         });
     </script>
 </body>

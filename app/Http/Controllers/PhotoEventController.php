@@ -150,7 +150,6 @@ class PhotoEventController extends Controller
                     $counter++;
                 }
 
-                // dd($fileName);
                 $path = $file->storeAs("photo-event/{$jenisEvent}/{$branchName}/" . $request->photo_event_date[$index], $fileName);
 
                 PhotoEvent::create([
