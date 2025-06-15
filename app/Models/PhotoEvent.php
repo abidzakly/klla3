@@ -37,7 +37,7 @@ class PhotoEvent extends Model
 
     public function getImage()
     {
-        return asset('storage/' . $this->file_path);
+        return asset('storage/' . $this->file_path) . '?t=' . $this->updated_at->timestamp;
     }
 
     public function getFileName()

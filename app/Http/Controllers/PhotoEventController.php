@@ -175,7 +175,6 @@ class PhotoEventController extends Controller
 
     public function show(PhotoEvent $photoEvent)
     {
-        // Untuk AJAX info modal
         $data = $photoEvent->toArray();
         $data['file_url'] = $photoEvent->file_path ? asset('storage/' . $photoEvent->file_path) : '';
         $data['photo_event_file_name'] = pathinfo($photoEvent->file_path, PATHINFO_FILENAME);
