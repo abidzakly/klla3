@@ -48,6 +48,7 @@ class SPK extends Model
         'district',
         'sub_district',
         'date_spk',
+        'branch_id'
     ];
 
     protected $casts = [

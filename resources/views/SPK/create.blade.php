@@ -1001,25 +1001,4 @@
 </body>
 
 </html>
-            window.selectedBranchName = branchName;
-        }
 
-        // Branch dropdown functionality
-        const branchDropdownButton = document.getElementById("branchDropdownButton");
-        const branchDropdownMenu = document.getElementById("branchDropdownMenu");
-
-        branchDropdownButton.addEventListener("click", () => {
-            branchDropdownMenu.classList.toggle("hidden");
-            branchDropdownMenu.classList.toggle("opacity-0");
-            branchDropdownMenu.classList.toggle("scale-95");
-        });
-
-        document.addEventListener("click", (event) => {
-            if (!branchDropdownButton.contains(event.target) && !branchDropdownMenu.contains(event.target)) {
-                branchDropdownMenu.classList.add("hidden", "opacity-0", "scale-95");
-            }
-        });
-    </script>
-</body>
-
-</html>
