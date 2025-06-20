@@ -28,7 +28,6 @@ return new class extends Migration
             $table->string('customer_type');
             $table->string('fleet');
             $table->string('color_code');
-            $table->string('branch_id_text');
             $table->string('type_id');
             $table->boolean('valid');
             $table->date('valid_date');
@@ -44,7 +43,6 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('district')->nullable();
             $table->string('sub_district')->nullable();
-            $table->date('date_spk');
             $table->timestamps();
             
             // Hapus foreign key constraint karena menyebabkan masalah

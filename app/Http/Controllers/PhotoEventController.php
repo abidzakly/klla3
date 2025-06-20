@@ -168,7 +168,6 @@ class PhotoEventController extends Controller
                 DB::commit();
                 return Response::success(null, 'Upload berhasil');
         } catch (\Exception $e) {
-            dd($e);
             DB::rollBack();
             return Response::errorCatch($e, 'Upload gagal');
         }
