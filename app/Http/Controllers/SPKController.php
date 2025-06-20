@@ -15,6 +15,12 @@ class SPKController extends Controller
 {
     public function store(Request $request)
     {
+        // Check if this is a step validation request
+        if ($request->has('validate_step')) {
+            return $this->validateStep($request);
+        }
+
+        // Final submission logic
         DB::beginTransaction();
 
         try {
@@ -22,91 +28,56 @@ class SPKController extends Controller
                 $branch = Branch::findOrFail($request->branch_id);
             }
 
-            if (count($request->data) == 1) {
-                $rules = [
-                    'branch_id' => 'nullable|exists:branches,id_branch',
-                    'data.*.nomor_spk' => 'required|string',
-                    'data.*.customer_name_1' => 'required|string',
-                    'data.*.customer_name_2' => 'required|string',
-                    'data.*.payment_method' => 'required|string',
-                    'data.*.leasing' => 'nullable|string',
-                    'data.*.model' => 'required|string',
-                    'data.*.type' => 'required|string',
-                    'data.*.color' => 'required|string',
-                    'data.*.sales' => 'required|string',
-                    'data.*.branch' => 'required|string',
-                    'data.*.status' => 'required|string',
-                    'data.*.total_payment' => 'required|numeric',
-                    'data.*.customer_type' => 'required|string',
-                    'data.*.fleet' => 'required|string',
-                    'data.*.color_code' => 'required|string',
-                    'data.*.branch_id_text' => 'required|string',
-                    'data.*.type_id' => 'required|string',
-                    'data.*.valid' => 'required|boolean',
-                    'data.*.valid_date' => 'required|date',
-                    'data.*.custom_type' => 'nullable|string',
-                    'data.*.spk_status' => 'required|string',
-                    'data.*.supervisor' => 'nullable|string',
-                    'data.*.date_if_credit_agreement' => 'nullable|date',
-                    'data.*.po_date' => 'nullable|date',
-                    'data.*.po_number' => 'nullable|string',
-                    'data.*.buyer_status' => 'nullable|string',
-                    'data.*.religion' => 'nullable|string',
-                    'data.*.province' => 'nullable|string',
-                    'data.*.city' => 'nullable|string',
-                    'data.*.district' => 'nullable|string',
-                    'data.*.sub_district' => 'nullable|string',
-                    'data.*.date_spk' => 'required|date',
-                ];
+            // Collect all form data from all steps
+            $allFormData = $request->data[0] ?? $request->data;
 
-                $message = [
-                    'branch_id.exists' => 'Cabang tidak valid.',
-                    'data.*.nomor_spk.required' => 'Nomor SPK tidak boleh kosong.',
-                    'data.*.customer_name_1.required' => 'Nama Customer 1 tidak boleh kosong.',
-                    'data.*.customer_name_2.required' => 'Nama Customer 2 tidak boleh kosong.',
-                    'data.*.payment_method.required' => 'Metode Pembayaran tidak boleh kosong.',
-                    'data.*.model.required' => 'Model tidak boleh kosong.',
-                    'data.*.type.required' => 'Tipe tidak boleh kosong.',
-                    'data.*.color.required' => 'Warna tidak boleh kosong.',
-                    'data.*.sales.required' => 'Sales tidak boleh kosong.',
-                    'data.*.branch.required' => 'Cabang tidak boleh kosong.',
-                    'data.*.status.required' => 'Status tidak boleh kosong.',
-                    'data.*.total_payment.required' => 'Total Pembayaran tidak boleh kosong.',
-                    'data.*.total_payment.numeric' => 'Total Pembayaran harus berupa angka.',
-                    'data.*.customer_type.required' => 'Tipe Customer tidak boleh kosong.',
-                    'data.*.color_code.required' => 'Kode Warna tidak boleh kosong.',
-                    'data.*.branch_id_text.required' => 'ID Cabang tidak boleh kosong.',
-                    'data.*.type_id.required' => 'ID Tipe tidak boleh kosong.',
-                    'data.*.valid.required' => 'Valid tidak boleh kosong.',
-                    'data.*.valid.boolean' => 'Valid harus berupa boolean.',
-                    'data.*.valid_date.required' => 'Tanggal Valid tidak boleh kosong.',
-                    'data.*.valid_date.date' => 'Tanggal Valid harus berupa tanggal.',
-                    'data.*.spk_status.required' => 'Status SPK tidak boleh kosong.',
-                    'data.*.fleet.required' => 'Fleet tidak boleh kosong.',
-                    'data.*.date_spk.required' => 'Tanggal SPK harus diisi.',
-                    'data.*.date_spk.date' => 'Format tanggal SPK tidak valid.',
-                ];
+            // Validate all data for final submission
+            $rules = [
+                'nomor_spk' => 'required|string',
+                'customer_name_1' => 'required|string',
+                'payment_method' => 'required|string',
+                'model' => 'required|string',
+                'type' => 'required|string',
+                'color' => 'required|string',
+                'sales' => 'required|string',
+                'branch' => 'required|string',
+                'status' => 'required|string',
+                'total_payment' => 'required|numeric',
+                'customer_type' => 'required|string',
+                'fleet' => 'required|string',
+                'color_code' => 'required|string',
+                'branch_id_text' => 'required|string',
+                'type_id' => 'required|string',
+                'valid' => 'required|boolean',
+                'valid_date' => 'required|date',
+                'spk_status' => 'required|string',
+                'date_spk' => 'required|date',
+                'customer_name_2' => 'nullable|string',
+                'leasing' => 'nullable|string',
+                'supervisor' => 'nullable|string',
+                'custom_type' => 'nullable|string',
+                'date_if_credit_agreement' => 'nullable|date',
+                'po_date' => 'nullable|date',
+                'po_number' => 'nullable|string',
+                'buyer_status' => 'nullable|string',
+                'religion' => 'nullable|string',
+                'province' => 'nullable|string',
+                'city' => 'nullable|string',
+                'district' => 'nullable|string',
+                'sub_district' => 'nullable|string',
+            ];
 
-                $validator = Validator::make($request->all(), $rules, $message);
+            $validator = Validator::make($allFormData, $rules);
 
-                if ($validator->fails()) {
-                    return Response::errorValidate($validator->errors(), 'Validation failed.');
-                }
+            if ($validator->fails()) {
+                return Response::errorValidate($validator->errors(), 'Validation failed.');
             }
 
-            foreach ($request->data as $key => $row) {
-                if ($key == 0 && in_array(null, $row, true)) {
-                    continue;
-                }
+            $data = $validator->validated();
+            $data['branch_id'] = $request->branch_id;
+            $data['valid'] = $data['valid'] ? 1 : 0;
 
-                if (in_array(null, $row) && count($request->data) > 1) {
-                    return response()->json(['message' => 'Data SPK gagal disimpan. Pastikan semua data terisi.'], 422);
-                }
-
-                $row['valid'] = $row['valid'] ? 1 : 0;
-                $row['branch_id'] = $request->branch_id;
-                SPK::create($row);
-            }
+            SPK::create($data);
 
             DB::commit();
             return Response::success(null, 'Data SPK berhasil disimpan.');
@@ -116,12 +87,192 @@ class SPKController extends Controller
         }
     }
 
+    private function validateStep(Request $request)
+    {
+        try {
+            $step = $request->step;
+            $data = $request->data;
+
+            // Define validation rules for each step - sesuai dengan form create dan edit
+            $stepRules = [
+                1 => [
+                    'customer_name_1' => 'required|string|max:255',
+                    'customer_name_2' => 'nullable|string|max:255',
+                    'buyer_status' => 'nullable|string|max:255',
+                    'religion' => 'nullable|string|max:255',
+                    'province' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'district' => 'nullable|string|max:255',
+                    'sub_district' => 'nullable|string|max:255',
+                ],
+                2 => [
+                    'model' => 'required|string|max:255',
+                    'type' => 'required|string|max:255',
+                    'color' => 'required|string|max:255',
+                    'color_code' => 'required|string|max:255',
+                    'fleet' => 'required|string|max:255',
+                    'customer_type' => 'required|string|max:255',
+                ],
+                3 => [
+                    'nomor_spk' => 'required|string|max:255',
+                    'spk_status' => 'required|string|max:255',
+                    'leasing' => 'nullable|string|max:255',
+                    'status' => 'required|string|max:255',
+                    'payment_method' => 'required|string|max:255',
+                    'total_payment' => 'required|numeric|min:0',
+                ],
+                4 => [
+                    'branch_id_text' => 'required|string|max:255',
+                    'branch' => 'required|string|max:255',
+                    'sales' => 'required|string|max:255',
+                    'supervisor' => 'nullable|string|max:255',
+                    'type_id' => 'required|string|max:255',
+                    'custom_type' => 'nullable|string|max:255',
+                ],
+                5 => [
+                    'valid_date' => 'required|date',
+                    'valid' => 'required|in:0,1',
+                    'po_number' => 'nullable|string|max:255',
+                    'po_date' => 'nullable|date',
+                    'date_if_credit_agreement' => 'nullable|date',
+                    'date_spk' => 'required|date',
+                ],
+            ];
+
+            $stepMessages = [
+                1 => [
+                    'customer_name_1.required' => 'Nama Customer 1 wajib diisi.',
+                    'customer_name_1.string' => 'Nama Customer 1 harus berupa teks.',
+                    'customer_name_1.max' => 'Nama Customer 1 maksimal 255 karakter.',
+                    'customer_name_2.string' => 'Nama Customer 2 harus berupa teks.',
+                    'customer_name_2.max' => 'Nama Customer 2 maksimal 255 karakter.',
+                    'buyer_status.string' => 'Status pembeli harus berupa teks.',
+                    'buyer_status.max' => 'Status pembeli maksimal 255 karakter.',
+                    'religion.string' => 'Agama harus berupa teks.',
+                    'religion.max' => 'Agama maksimal 255 karakter.',
+                    'province.string' => 'Provinsi harus berupa teks.',
+                    'province.max' => 'Provinsi maksimal 255 karakter.',
+                    'city.string' => 'Kota harus berupa teks.',
+                    'city.max' => 'Kota maksimal 255 karakter.',
+                    'district.string' => 'Kabupaten harus berupa teks.',
+                    'district.max' => 'Kabupaten maksimal 255 karakter.',
+                    'sub_district.string' => 'Kecamatan harus berupa teks.',
+                    'sub_district.max' => 'Kecamatan maksimal 255 karakter.',
+                ],
+                2 => [
+                    'model.required' => 'Model kendaraan wajib diisi.',
+                    'model.string' => 'Model kendaraan harus berupa teks.',
+                    'model.max' => 'Model kendaraan maksimal 255 karakter.',
+                    'type.required' => 'Tipe kendaraan wajib diisi.',
+                    'type.string' => 'Tipe kendaraan harus berupa teks.',
+                    'type.max' => 'Tipe kendaraan maksimal 255 karakter.',
+                    'color.required' => 'Warna kendaraan wajib diisi.',
+                    'color.string' => 'Warna kendaraan harus berupa teks.',
+                    'color.max' => 'Warna kendaraan maksimal 255 karakter.',
+                    'color_code.required' => 'Kode warna wajib diisi.',
+                    'color_code.string' => 'Kode warna harus berupa teks.',
+                    'color_code.max' => 'Kode warna maksimal 255 karakter.',
+                    'fleet.required' => 'Fleet wajib diisi.',
+                    'fleet.string' => 'Fleet harus berupa teks.',
+                    'fleet.max' => 'Fleet maksimal 255 karakter.',
+                    'customer_type.required' => 'Tipe customer wajib diisi.',
+                    'customer_type.string' => 'Tipe customer harus berupa teks.',
+                    'customer_type.max' => 'Tipe customer maksimal 255 karakter.',
+                ],
+                3 => [
+                    'nomor_spk.required' => 'Nomor SPK wajib diisi.',
+                    'nomor_spk.string' => 'Nomor SPK harus berupa teks.',
+                    'nomor_spk.max' => 'Nomor SPK maksimal 255 karakter.',
+                    'spk_status.required' => 'Status SPK wajib diisi.',
+                    'spk_status.string' => 'Status SPK harus berupa teks.',
+                    'spk_status.max' => 'Status SPK maksimal 255 karakter.',
+                    'leasing.string' => 'Leasing harus berupa teks.',
+                    'leasing.max' => 'Leasing maksimal 255 karakter.',
+                    'status.required' => 'Status wajib diisi.',
+                    'status.string' => 'Status harus berupa teks.',
+                    'status.max' => 'Status maksimal 255 karakter.',
+                    'payment_method.required' => 'Metode pembayaran wajib diisi.',
+                    'payment_method.string' => 'Metode pembayaran harus berupa teks.',
+                    'payment_method.max' => 'Metode pembayaran maksimal 255 karakter.',
+                    'total_payment.required' => 'Total pembayaran wajib diisi.',
+                    'total_payment.numeric' => 'Total pembayaran harus berupa angka.',
+                    'total_payment.min' => 'Total pembayaran tidak boleh negatif.',
+                ],
+                4 => [
+                    'branch_id_text.required' => 'ID cabang wajib diisi.',
+                    'branch_id_text.string' => 'ID cabang harus berupa teks.',
+                    'branch_id_text.max' => 'ID cabang maksimal 255 karakter.',
+                    'branch.required' => 'Nama cabang wajib diisi.',
+                    'branch.string' => 'Nama cabang harus berupa teks.',
+                    'branch.max' => 'Nama cabang maksimal 255 karakter.',
+                    'sales.required' => 'Nama sales wajib diisi.',
+                    'sales.string' => 'Nama sales harus berupa teks.',
+                    'sales.max' => 'Nama sales maksimal 255 karakter.',
+                    'supervisor.string' => 'Supervisor harus berupa teks.',
+                    'supervisor.max' => 'Supervisor maksimal 255 karakter.',
+                    'type_id.required' => 'ID tipe wajib diisi.',
+                    'type_id.string' => 'ID tipe harus berupa teks.',
+                    'type_id.max' => 'ID tipe maksimal 255 karakter.',
+                    'custom_type.string' => 'Custom type harus berupa teks.',
+                    'custom_type.max' => 'Custom type maksimal 255 karakter.',
+                ],
+                5 => [
+                    'valid_date.required' => 'Tanggal valid wajib diisi.',
+                    'valid_date.date' => 'Format tanggal valid tidak sesuai.',
+                    'valid.required' => 'Status valid wajib dipilih.',
+                    'valid.in' => 'Status valid harus berupa 0 atau 1.',
+                    'po_number.string' => 'Nomor PO harus berupa teks.',
+                    'po_number.max' => 'Nomor PO maksimal 255 karakter.',
+                    'po_date.date' => 'Format tanggal PO tidak sesuai.',
+                    'date_if_credit_agreement.date' => 'Format tanggal kredit tidak sesuai.',
+                    'date_spk.required' => 'Tanggal SPK wajib diisi.',
+                    'date_spk.date' => 'Format tanggal SPK tidak sesuai.',
+                ],
+            ];
+
+            if (!isset($stepRules[$step])) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Step tidak valid.',
+                    'errors' => ['step' => ['Step tidak valid.']]
+                ], 422);
+            }
+
+            $rules = $stepRules[$step];
+            $messages = $stepMessages[$step] ?? [];
+
+            $validator = Validator::make($data, $rules, $messages);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Validasi gagal.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            return response()->json([
+                'error' => false,
+                'message' => 'Validasi berhasil!',
+                'data' => [
+                    'ignore_alert' => true,
+                    'step' => (int) ($step + 1),
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Terjadi kesalahan validasi.',
+                'errors' => ['general' => ['Terjadi kesalahan sistem.']]
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = SPK::with('branch');
+            $data = SPK::query();
 
-            // Branch filtering
             if ($request->branch_id) {
                 $data->where('branch_id', $request->branch_id);
             }
@@ -139,117 +290,31 @@ class SPKController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('nomor_spk', function ($row) {
-                    return '<div class="editable" name="nomor_spk">' . $row->nomor_spk . '</div>';
+                ->editColumn('total_payment', function ($row) {
+                    return 'Rp ' . number_format($row->total_payment, 0, ',', '.');
                 })
-                ->addColumn('customer_name_1', function ($row) {
-                    return '<div class="editable" name="customer_name_1">' . $row->customer_name_1 . '</div>';
-                })
-                ->addColumn('customer_name_2', function ($row) {
-                    return '<div class="editable" name="customer_name_2">' . $row->customer_name_2 . '</div>';
-                })
-                ->addColumn('payment_method', function ($row) {
-                    return '<div class="editable" name="payment_method">' . $row->payment_method . '</div>';
-                })
-                ->addColumn('leasing', function ($row) {
-                    return '<div class="editable" name="leasing">' . $row->leasing . '</div>';
-                })
-                ->addColumn('model', function ($row) {
-                    return '<div class="editable" name="model">' . $row->model . '</div>';
-                })
-                ->addColumn('type', function ($row) {
-                    return '<div class="editable" name="type">' . $row->type . '</div>';
-                })
-                ->addColumn('color', function ($row) {
-                    return '<div class="editable" name="color">' . $row->color . '</div>';
-                })
-                ->addColumn('sales', function ($row) {
-                    return '<div class="editable" name="sales">' . $row->sales . '</div>';
-                })
-                ->addColumn('branch', function ($row) {
-                    return '<div class="editable" name="branch">' . $row->branch . '</div>';
-                })
-                ->addColumn('status', function ($row) {
-                    return '<div class="editable" name="status">' . $row->status . '</div>';
-                })
-                ->addColumn('total_payment', function ($row) {
-                    return '<div class="editable" name="total_payment">' . $row->total_payment . '</div>';
-                })
-                ->addColumn('customer_type', function ($row) {
-                    return '<div class="editable" name="customer_type">' . $row->customer_type . '</div>';
-                })
-                ->addColumn('fleet', function ($row) {
-                    return '<div class="editable" name="fleet">' . $row->fleet . '</div>';
-                })
-                ->addColumn('color_code', function ($row) {
-                    return '<div class="editable" name="color_code">' . $row->color_code . '</div>';
-                })
-                ->addColumn('branch_id_text', function ($row) {
-                    return '<div class="editable" name="branch_id_text">' . $row->branch_id_text . '</div>';
-                })
-                ->addColumn('type_id', function ($row) {
-                    return '<div class="editable" name="type_id">' . $row->type_id . '</div>';
-                })
-                ->addColumn('valid', function ($row) {
-                    $checkbox = "<input type='checkbox' class='editable' name='valid' data-id='$row->id_spk' " . ($row->valid ? 'checked' : '') . " readonly disabled>";
-                    return '<div class="editable" name="valid" data-current-value="' . $row->valid . '">' . $checkbox . '</div>';
-                })
-                ->addColumn('valid_date', function ($row) {
-                    return '<div class="editable" name="valid_date">' . ($row->valid_date ? $row->valid_date->format('Y-m-d') : '') . '</div>';
-                })
-                ->addColumn('custom_type', function ($row) {
-                    return '<div class="editable" name="custom_type">' . $row->custom_type . '</div>';
-                })
-                ->addColumn('spk_status', function ($row) {
-                    return '<div class="editable" name="spk_status">' . $row->spk_status . '</div>';
-                })
-                ->addColumn('supervisor', function ($row) {
-                    return '<div class="editable" name="supervisor">' . $row->supervisor . '</div>';
-                })
-                ->addColumn('date_if_credit_agreement', function ($row) {
-                    return '<div class="editable" name="date_if_credit_agreement">' . ($row->date_if_credit_agreement ? $row->date_if_credit_agreement->format('Y-m-d') : '') . '</div>';
-                })
-                ->addColumn('po_date', function ($row) {
-                    return '<div class="editable" name="po_date">' .  ($row->po_date ? $row->po_date->format('Y-m-d') : '') . '</div>';
-                })
-                ->addColumn('po_number', function ($row) {
-                    return '<div class="editable" name="po_number">' . $row->po_number . '</div>';
-                })
-                ->addColumn('buyer_status', function ($row) {
-                    return '<div class="editable" name="buyer_status">' . $row->buyer_status . '</div>';
-                })
-                ->addColumn('religion', function ($row) {
-                    return '<div class="editable" name="religion">' . $row->religion . '</div>';
-                })
-                ->addColumn('province', function ($row) {
-                    return '<div class="editable" name="province">' . $row->province . '</div>';
-                })
-                ->addColumn('city', function ($row) {
-                    return '<div class="editable" name="city">' . $row->city . '</div>';
-                })
-                ->addColumn('district', function ($row) {
-                    return '<div class="editable" name="district">' . $row->district . '</div>';
-                })
-                ->addColumn('sub_district', function ($row) {
-                    return '<div class="editable" name="sub_district">' . $row->sub_district . '</div>';
-                })
-                ->addColumn('date_spk', function ($row) {
-                    return '<div class="editable" name="date_spk">' . ($row->date_spk ? $row->date_spk->format('Y-m-d') : '') . '</div>';
+                ->editColumn('date_spk', function ($row) {
+                    return $row->date_spk
+                        ? Carbon::parse($row->date_spk)->translatedFormat('d F Y')
+                        : '-';
                 })
                 ->addColumn('action', function ($row) {
-                    $editButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-green-500 rounded-lg hover:bg-green-600 edit"
+                    $showButton = '<a href="' . route('spk.show', $row->id_spk) . '" class="inline-block px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 mr-1">
+                        <i class="fas fa-eye"></i> Detail
+                    </a>';
+
+                    $editButton = '<a href="' . route('spk.edit', $row->id_spk) . '" class="inline-block px-3 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600 mr-1">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>';
+
+                    $deleteButton = '<button class="inline-block px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600 delete"
                         data-id="' . $row->id_spk . '">
-                        Edit <i class="ti ti-edit"></i>
+                        <i class="fas fa-trash"></i> Delete
                     </button>';
 
-                    $deleteButton = '<button class="flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-red-500 rounded-lg hover:bg-red-600 delete"
-                        data-id="' . $row->id_spk . '">
-                        Delete <i class="ti ti-trash"></i>
-                    </button>';
-
-                    return '<div class="flex gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
+                    return '<div class="flex gap-1">' . $showButton . $editButton . $deleteButton . '</div>';
                 })
-                ->rawColumns(['nomor_spk', 'customer_name_1', 'customer_name_2', 'payment_method', 'leasing', 'model', 'type', 'color', 'sales', 'branch', 'status', 'total_payment', 'customer_type', 'fleet', 'color_code', 'branch_id_text', 'type_id', 'valid', 'valid_date', 'custom_type', 'spk_status', 'supervisor', 'date_if_credit_agreement', 'po_date', 'po_number', 'buyer_status', 'religion', 'province', 'city', 'district', 'sub_district', 'date_spk', 'action'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
@@ -259,8 +324,6 @@ class SPKController extends Controller
 
     public function create(Request $request)
     {
-        // Jika ada parameter branch, cari berdasarkan nama branch
-        // Jika tidak ada atau tidak ditemukan, gunakan branch yang pertama
         if ($request->has('branch') && $request->branch) {
             $branch = Branch::where('branch_name', $request->branch)->first();
             if (!$branch) {
@@ -273,14 +336,30 @@ class SPKController extends Controller
         return view('SPK.create', compact('branch'));
     }
 
+    public function show($id)
+    {
+        $spk = SPK::findOrFail($id);
+        return view('SPK.show', compact('spk'));
+    }
+
+    public function edit($id)
+    {
+        $spk = SPK::findOrFail($id);
+        return view('SPK.edit', compact('spk'));
+    }
+
     public function update(Request $request, $id)
     {
+        // Check if this is a step validation request for edit form
+        if ($request->has('validate_step')) {
+            return $this->validateStep($request);
+        }
+
+        // Final update submission
         $rules = [
             'nomor_spk' => 'required|string',
             'customer_name_1' => 'required|string',
-            'customer_name_2' => 'required|string',
             'payment_method' => 'required|string',
-            'leasing' => 'required|string',
             'model' => 'required|string',
             'type' => 'required|string',
             'color' => 'required|string',
@@ -295,51 +374,27 @@ class SPKController extends Controller
             'type_id' => 'required|string',
             'valid' => 'required|boolean',
             'valid_date' => 'required|date',
-            'custom_type' => 'required|string',
             'spk_status' => 'required|string',
-            'supervisor' => 'required|string',
-            'date_if_credit_agreement' => 'required|date',
-            'po_date' => 'required|date',
-            'po_number' => 'required|string',
-            'buyer_status' => 'required|string',
-            'religion' => 'required|string',
-            'province' => 'required|string',
-            'city' => 'required|string',
-            'district' => 'required|string',
-            'sub_district' => 'required|string',
             'date_spk' => 'required|date',
+            'customer_name_2' => 'nullable|string',
+            'leasing' => 'nullable|string',
+            'supervisor' => 'nullable|string',
+            'custom_type' => 'nullable|string',
+            'date_if_credit_agreement' => 'nullable|date',
+            'po_date' => 'nullable|date',
+            'po_number' => 'nullable|string',
+            'buyer_status' => 'nullable|string',
+            'religion' => 'nullable|string',
+            'province' => 'nullable|string',
+            'city' => 'nullable|string',
+            'district' => 'nullable|string',
+            'sub_district' => 'nullable|string',
         ];
 
-        $message = [
-            'nomor_spk.required' => 'Nomor SPK tidak boleh kosong.',
-            'customer_name_1.required' => 'Nama Customer 1 tidak boleh kosong.',
-            'customer_name_2.required' => 'Nama Customer 2 tidak boleh kosong.',
-            'payment_method.required' => 'Metode Pembayaran tidak boleh kosong.',
-            'model.required' => 'Model tidak boleh kosong.',
-            'type.required' => 'Tipe tidak boleh kosong.',
-            'color.required' => 'Warna tidak boleh kosong.',
-            'sales.required' => 'Sales tidak boleh kosong.',
-            'branch.required' => 'Cabang tidak boleh kosong.',
-            'status.required' => 'Status tidak boleh kosong.',
-            'total_payment.required' => 'Total Pembayaran tidak boleh kosong.',
-            'total_payment.numeric' => 'Total Pembayaran harus berupa angka.',
-            'customer_type.required' => 'Tipe Customer tidak boleh kosong.',
-            'color_code.required' => 'Kode Warna tidak boleh kosong.',
-            'branch_id_text.required' => 'ID Cabang tidak boleh kosong.',
-            'type_id.required' => 'ID Tipe tidak boleh kosong.',
-            'valid.required' => 'Valid tidak boleh kosong.',
-            'valid.boolean' => 'Valid harus berupa boolean.',
-            'valid_date.required' => 'Tanggal Valid tidak boleh kosong.',
-            'valid_date.date' => 'Tanggal Valid harus berupa tanggal.',
-            'spk_status.required' => 'Status SPK tidak boleh kosong.',
-            'fleet.required' => 'Fleet tidak boleh kosong.',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $message);
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return Response::errorValidate($validator->errors(), 'Validation failed.');
-            // return Response::error(null, 'Data SPK gagal disimpan. Pastikan semua data terisi.');
         }
 
         DB::beginTransaction();
@@ -347,10 +402,8 @@ class SPKController extends Controller
         try {
             $spk = SPK::findOrFail($id);
             $data = $validator->validated();
-            $data['branch_id'] = $spk->branch_id;
+            $data['valid'] = $data['valid'] ? 1 : 0;
             $spk->update($data);
-            $spk->valid = $request->valid ? 1 : 0;
-            $spk->save();
 
             DB::commit();
             return Response::success(null, 'Data SPK berhasil diperbarui.');

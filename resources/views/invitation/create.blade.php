@@ -141,31 +141,31 @@
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
                                     <input type="text" name="name"
-                                        class=" w-full bg-transparent paste-input px-1 text-center">
+                                        class=" w-full bg-transparent paste-input px-1 text-center px-0 placeholder:text-gray-400" placeholder="isi">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
                                     <input type="text" name="address"
-                                        class=" w-full bg-transparent paste-input px-1 text-center">
+                                        class=" w-full bg-transparent paste-input px-1 text-center px-0 placeholder:text-gray-400" placeholder="isi">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
                                     <input type="text" name="number_phone"
-                                        class=" w-full bg-transparent paste-input px-1 text-center">
+                                        class=" w-full bg-transparent paste-input px-1 text-center px-0 placeholder:text-gray-400" placeholder="isi">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
                                     <input type="text" name="sales_invitation"
-                                        class=" w-full bg-transparent paste-input px-1 text-center">
+                                        class=" w-full bg-transparent paste-input px-1 text-center px-0 placeholder:text-gray-400" placeholder="isi">
                                 </div>
                             </td>
                             <td class="text-white text-xl ml-4  border-2 border-black w-20">
                                 <div class="m-2 bg-transparent text-white rounded-md">
                                     <input type="date" name="invitation_date"
-                                        class=" w-full bg-transparent paste-input px-1 text-center" value="{{ date('Y-m-d') }}">
+                                        class=" w-full bg-transparent paste-input px-1 text-center px-0 placeholder:text-gray-400" placeholder="isi" value="{{ date('Y-m-d') }}">
                                 </div>
                             </td>
                         </tr>

@@ -66,6 +66,7 @@ Route::post('/invitation/save', [InvitationController::class, 'save'])->name('in
 
 Route::resource('spk', SPKController::class);
 Route::post('/spk/save', [SPKController::class, 'save'])->name('spk.save');
+Route::post('/spk/validate-step', [SPKController::class, 'validateStep'])->name('spk.validate-step');
 
 Route::get('/foto/{photoEventType:photo_event_type_name}', [PhotoEventController::class, 'index'])->name('photo.event.type');
 Route::resource('photo-event', PhotoEventController::class)->except(['create', 'edit', 'show']);
