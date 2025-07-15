@@ -33,7 +33,8 @@ class MonitoringDoSpkController extends Controller
                     'monitoring_do_spk.gap_spk',
                     'monitoring_do_spk.ach_spk',
                     'monitoring_do_spk.status',
-                    'monitoring_do_spk.date'
+                    'monitoring_do_spk.date',
+                    DB::raw('ach_do + ach_spk as total_ach')
                 );
 
             if ($request->date) {
@@ -80,7 +81,7 @@ class MonitoringDoSpkController extends Controller
                 ->addColumn('target_do', function ($row) {
                     return '<div class="editable" data-name="target_do">' . $row->target_do . '</div>';
                 })
-                ->addColumn('mpp', function ($row) {                    
+                ->addColumn('mpp', function ($row) {
                     return '<div class="editable" data-name="mpp">' . $row->mpp . '</div>';
                 })
                 ->addColumn('gap_do', function ($row) {
@@ -90,17 +91,17 @@ class MonitoringDoSpkController extends Controller
                 ->addColumn('ach_do', function ($row) {
                     $format = $row->ach_do ? round($row->ach_do) . '%' : 0;
                     return '<div class="editable" data-name="ach_do">' . $format . '</div>';
-                })                
+                })
                 ->addColumn('productivity', function ($row) {
                     $format = $row->productivity ? round($row->productivity) . '%' : 0;
                     return '<div class="editable" data-name="productivity">' . $format . '</div>';
                 })
                 ->addColumn('target_spk', function ($row) {
                     return '<div class="editable" data-name="target_spk">' . $row->target_spk . '</div>';
-                })               
+                })
                 ->addColumn('act_spk', function ($row) {
                     return '<div class="editable" data-name="act_spk">' . $row->act_spk . '</div>';
-                })                                
+                })
                 ->addColumn('gap_spk', function ($row) {
                     $format = $row->gap_spk ? round($row->gap_spk) : 0;
                     return '<div class="editable" data-name="gap_spk">' . $format . '</div>';
@@ -109,6 +110,12 @@ class MonitoringDoSpkController extends Controller
                     $format = $row->ach_spk ? round($row->ach_spk) . '%' : 0;
                     return '<div class="editable" data-name="ach_spk">' . $format . '</div>';
                 })
+                // ->addColumn('total_ach', function ($row) {
+                //     $ach_do = $row->ach_spk ? round($row->ach_spk) : 0;
+                //     $ach_spk = $row->ach_do ? round($row->ach_do) : 0;
+                //     $total_ach = $ach_do + $ach_spk;
+                //     return $total_ach;
+                // })
                 ->addColumn('status', function ($row) {
                     $statusColors = [
                         StatusMonitoringDoSpk::ON_THE_TRACK => 'bg-green-500',
@@ -134,7 +141,7 @@ class MonitoringDoSpkController extends Controller
 
                     return '<div class="flex items-center justify-center gap-2 action-buttons">' . $editButton . ' ' . $deleteButton . '</div>';
                 })
-                ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action' , 'mpp', 'productivity'])
+                ->rawColumns(['nama_supervisor', 'target_do', 'act_do', 'gap_do', 'ach_do', 'target_spk', 'act_spk', 'gap_spk', 'ach_spk', 'status', 'action' , 'mpp', 'productivity', 'total_ach'])
                 ->order(function ($query) {
                     if (request()->has('order')) {
                         $order = request('order')[0];
@@ -239,7 +246,7 @@ class MonitoringDoSpkController extends Controller
                 $monitoring = null;
                 if (!empty($row['id_monitoring_do_spk'])) {
                     $monitoring = MonitoringDoSpk::where('id_monitoring_do_spk', $row['id_monitoring_do_spk'])->first();
-                }                
+                }
 
                 if ($request->type == 'DO') {
                     if ($monitoring) {
@@ -251,6 +258,7 @@ class MonitoringDoSpkController extends Controller
                             'id_supervisor' => $row['id_supervisor'],
                             'target_do' => $row['target_do'],
                             'act_do' => $row['act_do'],
+                            'mpp' => $row['mpp'],
                             'date' => $date,
                         ]);
                     }

@@ -86,6 +86,24 @@
             /* Jarak antar konten */
             text-align: center;
         }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: white !important;
+            /* warna teks pagination */
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            color: white !important;
+            /* tombol aktif */
+            background-color: #4CAF50 !important;
+            /* opsional: warna background tombol aktif */
+            border: 1px solid white;
+            /* opsional */
+        }
+
+        .paginate_button.current {
+            background: black !important;
+        }
     </style>
 </head>
 
@@ -96,7 +114,7 @@
         <h1 class="mx-auto text-xl font-bold" style="font-size: 36px;">Monitoring Data DO dan SPK</h1>
     </nav>
 
-    <div class="flex flex-col w-full max-w-6xl mt-6 space-y-4">
+    <div class="flex flex-col w-full max-w-7xl mt-6 space-y-4">
         <!-- Form Input -->
         <form id="data-form" class="w-full">
             @csrf
@@ -222,16 +240,17 @@
                         <th class="px-2 py-2 border border-2 border-black">Target DO</th>
                         <th class="px-2 py-2 border border-2 border-black">Act DO</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
-                        <th class="px-2 py-2 border border-2 border-black">MPP</th>
                         <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
-                        <th class="px-2 py-2 border border-2 border-black">Productivity</th>
                         <th class="px-2 py-2 border border-2 border-black">Target SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">ACT SPK</th>
                         <th class="px-2 py-2 border border-2 border-black">GAP</th>
                         <th class="px-2 py-2 border border-2 border-black">Ach (%)</th>
+                        <th class="px-2 py-2 border border-2 border-black">MPP</th>
+                        <th class="px-2 py-2 border border-2 border-black">Productivity</th>
                         <th class="px-2 py-2 text-center border border-2 border-black" style="width: 140px">Status</th>
                         <th class="px-2 py-2 text-center border border-2 border-black">Aksi</th>
                         <th class="px-2 py-2 text-center border border-2 border-black">Date</th>
+                        <th class="px-2 py-2 text-center border border-2 border-black">Total ACH</th>
                     </tr>
                 </thead>
             </table>
@@ -351,8 +370,7 @@
                         // d.end_date = $('#date_end').val();
                     }
                 },
-                columns: [
-                    {
+                columns: [{
                         data: 'nama_supervisor',
                         name: 'nama_supervisor',
                         searchable: true
@@ -373,18 +391,8 @@
                         searchable: true
                     },
                     {
-                        data: 'mpp',
-                        name: 'mpp',
-                        searchable: true
-                    },
-                    {
                         data: 'ach_do',
                         name: 'ach_do',
-                        searchable: true
-                    },
-                    {
-                        data: 'productivity',
-                        name: 'productivity',
                         searchable: true
                     },
                     {
@@ -408,6 +416,16 @@
                         searchable: true
                     },
                     {
+                        data: 'mpp',
+                        name: 'mpp',
+                        searchable: true
+                    },
+                    {
+                        data: 'productivity',
+                        name: 'productivity',
+                        searchable: true
+                    },
+                    {
                         data: 'status',
                         name: 'status',
                         searchable: true
@@ -422,9 +440,13 @@
                         data: 'date',
                         visible: false
                     },
+                    {
+                        data: 'total_ach',
+                        visible: false,
+                    },
                 ],
                 order: [
-                    [5, 'desc']
+                    [14, 'desc']
                 ],
                 drawCallback: function(settings) {
                     // Pastikan semua tombol "edit" memiliki event handler yang benar setelah render ulang
@@ -441,7 +463,7 @@
                             var tdWidth = $(this)
                                 .width(); // Ambil width td sebelum diubah menjadi input
 
-                            if(name == 'nama_supervisor') return;
+                            if (name == 'nama_supervisor') return;
 
                             if (name === 'gap_do' || name === 'ach_do' || name ===
                                 'gap_spk' || name === 'ach_spk' || name === 'status') {
